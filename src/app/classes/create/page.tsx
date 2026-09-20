@@ -31,11 +31,11 @@ export default function CreateClassPage() {
   const [scheduleSummary, setScheduleSummary] = useState('Tuesdays & Thursdays, 18:30 - 20:00 (MNT)');
   const [meetingLink, setMeetingLink] = useState('https://meet.google.com/new');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
-    const newClass = createClass({
+    const newClass = await createClass({
       title,
       description,
       subject,

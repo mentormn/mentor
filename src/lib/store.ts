@@ -10,13 +10,7 @@ import {
 } from './mockData';
 import { calculateSprintXp, calculateMentorTier } from './engine/tierProgression';
 import { generateCertificateId, generateCertificateSha256 } from './engine/certificate';
-
-const STORAGE_KEYS = {
-  USER: 'mentor_mn_user',
-  CLASSES: 'mentor_mn_classes',
-  DELIVERABLES: 'mentor_mn_deliverables',
-  CERTIFICATES: 'mentor_mn_certificates',
-};
+import { supabase } from './supabase/client';
 
 export function useMentorStore() {
   const [user, setUser] = useState<User>(CURRENT_USER);
@@ -24,64 +18,142 @@ export function useMentorStore() {
   const [deliverables, setDeliverables] = useState<Deliverable[]>(INITIAL_DELIVERABLES);
   const [certificates, setCertificates] = useState<Certificate[]>(INITIAL_CERTIFICATES);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isRealAuth, setIsRealAuth] = useState(false);
 
-  // Load from localStorage on mount
+  // Load from Supabase or Fallback
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
-      const savedClasses = localStorage.getItem(STORAGE_KEYS.CLASSES);
-      const savedDeliverables = localStorage.getItem(STORAGE_KEYS.DELIVERABLES);
-      const savedCertificates = localStorage.getItem(STORAGE_KEYS.CERTIFICATES);
+    async function loadData() {
+      try {
+        // 1. Check real Supabase user
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData?.user) {
+          setIsRealAuth(true);
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authData.user.id)
+            .single();
 
-      if (savedUser) {
-        try { setUser(JSON.parse(savedUser)); } catch {}
+          if (profile) {
+            setUser({
+              id: profile.id,
+              name: profile.name,
+              email: profile.email,
+              avatar: profile.avatar_url || CURRENT_USER.avatar,
+              gender: profile.gender || 'Prefer not to say',
+              age: profile.age || 17,
+              grade: profile.grade || '11th Grade',
+              school: profile.school || 'General Education School',
+              location: profile.location || 'Ulaanbaatar',
+              specializations: profile.specializations || [],
+              learningGoals: profile.learning_goals || [],
+              mentorTier: profile.mentor_tier || 'JUNIOR_MENTOR',
+              mentorXp: profile.mentor_xp || 0,
+              totalStudentsMentored: profile.total_students || 0,
+              completedClasses: profile.completed_classes || 0,
+              enrolledClassIds: [],
+            });
+          }
+        }
+
+        // 2. Fetch classes from Supabase
+        const { data: dbClasses, error: classErr } = await supabase
+          .from('sprint_classes')
+          .select('*, class_enrollments(*, profiles(*))')
+          .order('created_at', { ascending: false });
+
+        if (dbClasses && dbClasses.length > 0) {
+          const mapped: SprintClass[] = dbClasses.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            mentorId: c.mentor_id,
+            mentorName: c.mentor_name,
+            mentorTier: c.mentor_tier,
+            mentorSchool: c.mentor_school,
+            subject: c.subject,
+            curriculum: c.curriculum,
+            maxSeats: c.max_seats,
+            startDate: c.start_date,
+            endDate: c.end_date,
+            durationWeeks: c.duration_weeks,
+            scheduleSummary: c.schedule_summary,
+            meetingLink: c.meeting_link,
+            status: c.status,
+            createdAt: c.created_at,
+            enrolledStudents: (c.class_enrollments || []).map((e: any) => ({
+              id: e.student_id,
+              name: e.profiles?.name || 'Student',
+              school: e.profiles?.school || 'School',
+              location: e.profiles?.location || 'Mongolia',
+              grade: e.profiles?.grade || 'High School',
+              enrolledAt: e.enrolled_at,
+            })),
+          }));
+          setClasses(mapped);
+        }
+
+        // 3. Fetch deliverables
+        const { data: dbDeliverables } = await supabase
+          .from('deliverables')
+          .select('*')
+          .order('submitted_at', { ascending: false });
+
+        if (dbDeliverables && dbDeliverables.length > 0) {
+          setDeliverables(
+            dbDeliverables.map((d: any) => ({
+              id: d.id,
+              classId: d.class_id,
+              studentId: d.student_id,
+              studentName: d.student_name,
+              title: d.title,
+              urlOrNotes: d.url_or_notes,
+              mentorFeedback: d.mentor_feedback,
+              status: d.status,
+              submittedAt: d.submitted_at,
+              approvedAt: d.approved_at,
+            }))
+          );
+        }
+
+        // 4. Fetch certificates
+        const { data: dbCerts } = await supabase
+          .from('certificates')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (dbCerts && dbCerts.length > 0) {
+          setCertificates(
+            dbCerts.map((c: any) => ({
+              id: c.id,
+              mentorId: c.mentor_id,
+              mentorName: c.mentor_name,
+              mentorSchool: c.mentor_school,
+              tier: c.tier,
+              totalHours: c.total_hours,
+              studentsImpacted: c.students_impacted,
+              classTitle: c.class_title,
+              subject: c.subject,
+              sha256Hash: c.sha256_hash,
+              issuedDate: c.issued_date,
+              verificationUrl: `https://mentor.mn/verify/${c.id}`,
+            }))
+          );
+        }
+      } catch (e) {
+        console.warn('Using local store fallback:', e);
+      } finally {
+        setIsLoaded(true);
       }
-      if (savedClasses) {
-        try { setClasses(JSON.parse(savedClasses)); } catch {}
-      }
-      if (savedDeliverables) {
-        try { setDeliverables(JSON.parse(savedDeliverables)); } catch {}
-      }
-      if (savedCertificates) {
-        try { setCertificates(JSON.parse(savedCertificates)); } catch {}
-      }
-      setIsLoaded(true);
     }
+
+    loadData();
   }, []);
 
-  // Sync to localStorage
-  const saveUser = (newUser: User) => {
-    setUser(newUser);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(newUser));
-    }
-  };
-
-  const saveClasses = (newClasses: SprintClass[]) => {
-    setClasses(newClasses);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.CLASSES, JSON.stringify(newClasses));
-    }
-  };
-
-  const saveDeliverables = (newDeliverables: Deliverable[]) => {
-    setDeliverables(newDeliverables);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.DELIVERABLES, JSON.stringify(newDeliverables));
-    }
-  };
-
-  const saveCertificates = (newCertificates: Certificate[]) => {
-    setCertificates(newCertificates);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.CERTIFICATES, JSON.stringify(newCertificates));
-    }
-  };
-
   /**
-   * Learner claims an open seat in a class
+   * Claim an open seat in a sprint class
    */
-  const claimSeat = (classId: string): { success: boolean; message: string } => {
+  const claimSeat = async (classId: string): Promise<{ success: boolean; message: string }> => {
     const targetClass = classes.find((c) => c.id === classId);
     if (!targetClass) return { success: false, message: 'Class not found' };
 
@@ -91,6 +163,16 @@ export function useMentorStore() {
 
     if (targetClass.enrolledStudents.length >= targetClass.maxSeats) {
       return { success: false, message: 'Class is already full' };
+    }
+
+    // Try Supabase insert
+    try {
+      await supabase.from('class_enrollments').insert({
+        class_id: classId,
+        student_id: user.id,
+      });
+    } catch (e) {
+      console.warn('Local enrollment fallback');
     }
 
     const updatedEnrolled = [
@@ -107,34 +189,70 @@ export function useMentorStore() {
 
     const isFull = updatedEnrolled.length >= targetClass.maxSeats;
 
-    const updatedClasses = classes.map((c) =>
-      c.id === classId
-        ? {
-            ...c,
-            enrolledStudents: updatedEnrolled,
-            status: isFull ? ('full' as const) : c.status,
-          }
-        : c
+    setClasses((prev) =>
+      prev.map((c) =>
+        c.id === classId
+          ? {
+              ...c,
+              enrolledStudents: updatedEnrolled,
+              status: isFull ? 'full' : c.status,
+            }
+          : c
+      )
     );
 
-    const updatedUser: User = {
-      ...user,
-      enrolledClassIds: [...user.enrolledClassIds, classId],
-    };
-
-    saveClasses(updatedClasses);
-    saveUser(updatedUser);
+    setUser((prev) => ({
+      ...prev,
+      enrolledClassIds: [...prev.enrolledClassIds, classId],
+    }));
 
     return { success: true, message: 'Successfully enrolled in sprint class!' };
   };
 
   /**
-   * Mentor creates a new sprint class
+   * Create a new sprint class
    */
-  const createClass = (newClassData: Omit<SprintClass, 'id' | 'mentorId' | 'mentorName' | 'mentorTier' | 'mentorSchool' | 'enrolledStudents' | 'status' | 'createdAt'>): SprintClass => {
+  const createClass = async (
+    newClassData: Omit<
+      SprintClass,
+      'id' | 'mentorId' | 'mentorName' | 'mentorTier' | 'mentorSchool' | 'enrolledStudents' | 'status' | 'createdAt'
+    >
+  ): Promise<SprintClass> => {
+    let generatedId = `class-${Date.now()}`;
+
+    try {
+      const { data, error } = await supabase
+        .from('sprint_classes')
+        .insert({
+          title: newClassData.title,
+          description: newClassData.description,
+          mentor_id: user.id,
+          mentor_name: user.name,
+          mentor_school: user.school,
+          mentor_tier: user.mentorTier,
+          subject: newClassData.subject,
+          curriculum: newClassData.curriculum,
+          max_seats: newClassData.maxSeats,
+          start_date: newClassData.startDate,
+          end_date: newClassData.endDate,
+          duration_weeks: newClassData.durationWeeks,
+          schedule_summary: newClassData.scheduleSummary,
+          meeting_link: newClassData.meetingLink,
+          status: 'open',
+        })
+        .select()
+        .single();
+
+      if (data) {
+        generatedId = data.id;
+      }
+    } catch (e) {
+      console.warn('Local class creation fallback');
+    }
+
     const newClass: SprintClass = {
       ...newClassData,
-      id: `class-${Date.now()}`,
+      id: generatedId,
       mentorId: user.id,
       mentorName: user.name,
       mentorTier: user.mentorTier,
@@ -144,17 +262,37 @@ export function useMentorStore() {
       createdAt: new Date().toISOString(),
     };
 
-    const updatedClasses = [newClass, ...classes];
-    saveClasses(updatedClasses);
+    setClasses((prev) => [newClass, ...prev]);
     return newClass;
   };
 
   /**
-   * Learner submits a deliverable for a class
+   * Submit deliverable
    */
-  const submitDeliverable = (classId: string, title: string, urlOrNotes: string): Deliverable => {
+  const submitDeliverable = async (classId: string, title: string, urlOrNotes: string): Promise<Deliverable> => {
+    let generatedId = `del-${Date.now()}`;
+
+    try {
+      const { data } = await supabase
+        .from('deliverables')
+        .insert({
+          class_id: classId,
+          student_id: user.id,
+          student_name: user.name,
+          title,
+          url_or_notes: urlOrNotes,
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (data) generatedId = data.id;
+    } catch (e) {
+      console.warn('Local deliverable submission fallback');
+    }
+
     const newDeliverable: Deliverable = {
-      id: `del-${Date.now()}`,
+      id: generatedId,
       classId,
       studentId: user.id,
       studentName: user.name,
@@ -164,52 +302,75 @@ export function useMentorStore() {
       submittedAt: new Date().toISOString(),
     };
 
-    const updated = [newDeliverable, ...deliverables];
-    saveDeliverables(updated);
+    setDeliverables((prev) => [newDeliverable, ...prev]);
     return newDeliverable;
   };
 
   /**
-   * Mentor approves a deliverable and awards XP / generates certificate if class complete
+   * Approve deliverable & issue certificate
    */
   const approveDeliverable = async (deliverableId: string, feedback: string) => {
     const del = deliverables.find((d) => d.id === deliverableId);
     if (!del) return;
 
-    const updatedDeliverables = deliverables.map((d) =>
-      d.id === deliverableId
-        ? {
-            ...d,
-            status: 'approved' as const,
-            mentorFeedback: feedback,
-            approvedAt: new Date().toISOString(),
-          }
-        : d
-    );
-    saveDeliverables(updatedDeliverables);
+    try {
+      await supabase
+        .from('deliverables')
+        .update({
+          status: 'approved',
+          mentor_feedback: feedback,
+          approved_at: new Date().toISOString(),
+        })
+        .eq('id', deliverableId);
+    } catch (e) {
+      console.warn('Local deliverable approval fallback');
+    }
 
-    // Reward mentor with XP
+    setDeliverables((prev) =>
+      prev.map((d) =>
+        d.id === deliverableId
+          ? {
+              ...d,
+              status: 'approved' as const,
+              mentorFeedback: feedback,
+              approvedAt: new Date().toISOString(),
+            }
+          : d
+      )
+    );
+
     const cls = classes.find((c) => c.id === del.classId);
     if (cls && cls.mentorId === user.id) {
-      const earnedXp = calculateSprintXp(1, 1, 1); // 60 XP for approving deliverable
+      const earnedXp = calculateSprintXp(1, 1, 1);
       const newXp = user.mentorXp + earnedXp;
       const newStudents = user.totalStudentsMentored + 1;
       const newClassesCount = user.completedClasses + 1;
       const newTier = calculateMentorTier(newXp, newClassesCount, newStudents);
 
-      const updatedUser: User = {
-        ...user,
+      try {
+        await supabase
+          .from('profiles')
+          .update({
+            mentor_xp: newXp,
+            total_students: newStudents,
+            completed_classes: newClassesCount,
+            mentor_tier: newTier,
+          })
+          .eq('id', user.id);
+      } catch (e) {}
+
+      setUser((prev) => ({
+        ...prev,
         mentorXp: newXp,
         totalStudentsMentored: newStudents,
         completedClasses: newClassesCount,
         mentorTier: newTier,
-      };
-      saveUser(updatedUser);
+      }));
 
-      // Issue an official certificate
+      // Issue certificate
       const certId = generateCertificateId();
       const issuedDate = new Date().toISOString().split('T')[0];
-      const certHours = cls.durationWeeks * 6; // 6 hours/week
+      const certHours = cls.durationWeeks * 6;
       const sha256 = await generateCertificateSha256({
         id: certId,
         mentorName: user.name,
@@ -220,6 +381,22 @@ export function useMentorStore() {
         classTitle: cls.title,
         issuedDate,
       });
+
+      try {
+        await supabase.from('certificates').insert({
+          id: certId,
+          mentor_id: user.id,
+          mentor_name: user.name,
+          mentor_school: user.school,
+          tier: newTier,
+          total_hours: certHours,
+          students_impacted: newStudents,
+          class_title: cls.title,
+          subject: cls.subject,
+          sha256_hash: sha256,
+          issued_date: issuedDate,
+        });
+      } catch (e) {}
 
       const newCert: Certificate = {
         id: certId,
@@ -236,7 +413,7 @@ export function useMentorStore() {
         verificationUrl: `https://mentor.mn/verify/${certId}`,
       };
 
-      saveCertificates([newCert, ...certificates]);
+      setCertificates((prev) => [newCert, ...prev]);
     }
   };
 
@@ -246,10 +423,10 @@ export function useMentorStore() {
     deliverables,
     certificates,
     isLoaded,
+    isRealAuth,
     claimSeat,
     createClass,
     submitDeliverable,
     approveDeliverable,
-    saveUser,
   };
 }

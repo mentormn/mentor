@@ -55,8 +55,8 @@ export default function ClassesPage() {
     return matchesSearch && matchesSubject && matchesSize;
   });
 
-  const handleClaimSeat = (classId: string) => {
-    const result = claimSeat(classId);
+  const handleClaimSeat = async (classId: string) => {
+    const result = await claimSeat(classId);
     setNotification(result.message);
     setTimeout(() => setNotification(null), 4000);
   };

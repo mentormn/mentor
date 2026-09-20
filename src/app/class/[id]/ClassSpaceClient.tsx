@@ -56,8 +56,8 @@ export default function ClassSpaceClient() {
   const classDeliverables = deliverables.filter((d) => d.classId === classId);
   const userDeliverable = classDeliverables.find((d) => d.studentId === user.id);
 
-  const handleEnroll = () => {
-    const res = claimSeat(currentClass.id);
+  const handleEnroll = async () => {
+    const res = await claimSeat(currentClass.id);
     setNotification(res.message);
     setTimeout(() => setNotification(null), 3000);
   };

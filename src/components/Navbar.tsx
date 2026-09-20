@@ -107,6 +107,13 @@ export default function Navbar() {
             {t('navOpenClass')}
           </Link>
 
+          <Link
+            href="/login"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 shadow-sm"
+          >
+            {language === 'mn' ? 'Нэвтрэх' : 'Sign In'}
+          </Link>
+
           {/* Unified Profile Link */}
           <Link
             href="/profile"

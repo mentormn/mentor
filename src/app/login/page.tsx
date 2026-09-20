@@ -12,17 +12,17 @@ import {
   User as UserIcon, 
   ArrowRight, 
   AlertCircle,
-  CheckCircle2,
-  Sparkles
+  CheckCircle2
 } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirectTo') || '/profile';
-  const { language, t } = useLanguage();
+  const initialMode = searchParams.get('mode') === 'signup' ? 'signup' : 'signin';
+  const redirectTo = searchParams.get('redirectTo') || '/dashboard';
+  const { language } = useLanguage();
 
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -51,14 +51,13 @@ function LoginForm() {
 
         if (error) throw error;
 
-        // If user is immediately signed in or session is established
         if (data.session) {
-          router.push('/onboarding');
+          router.push('/dashboard');
         } else {
           setSuccessMsg(
             language === 'mn'
-              ? 'Амжилттай бүртгүүллээ! Баталгаажуулах имэйлээ шалгана уу эсвэл нэвтэрнэ үү.'
-              : 'Sign-up successful! Please verify your email or sign in.'
+              ? 'Амжилттай бүртгүүллээ! Баталгаажуулах имэйлээ шалгана уу.'
+              : 'Sign-up successful! Please check your email to verify.'
           );
           setMode('signin');
         }
@@ -69,21 +68,7 @@ function LoginForm() {
         });
 
         if (error) throw error;
-
-        // Check if user has completed onboarding
-        if (data.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('school, grade')
-            .eq('id', data.user.id)
-            .single();
-
-          if (!profile || !profile.school || profile.school === 'General Education School') {
-            router.push('/onboarding');
-          } else {
-            router.push(redirectTo);
-          }
-        }
+        router.push(redirectTo);
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Authentication error');
@@ -97,7 +82,7 @@ function LoginForm() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/onboarding`,
+          redirectTo: `${window.location.origin}/dashboard`,
         },
       });
       if (error) throw error;
@@ -107,42 +92,40 @@ function LoginForm() {
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-grid-pattern">
-      <div className="absolute inset-0 bg-radial-glow pointer-events-none" />
-      
-      <div className="relative w-full max-w-md space-y-6">
+    <div className="min-h-[calc(100vh-10rem)] flex items-center justify-center px-4 py-16">
+      <div className="w-full max-w-sm space-y-6">
         
         {/* Header */}
         <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600/10 border border-blue-500/20 text-blue-400 group-hover:scale-105 transition-transform shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+          <Link href="/" className="inline-flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-white shadow-sm">
               <GraduationCap className="h-5 w-5" />
             </div>
           </Link>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-zinc-900">
             {mode === 'signin'
-              ? language === 'mn' ? 'Тавтай морил' : 'Welcome back'
+              ? language === 'mn' ? 'Тавтай морил' : 'Sign in to Mentor.mn'
               : language === 'mn' ? 'Бүртгэл үүсгэх' : 'Create an Account'}
           </h1>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-500">
             {language === 'mn'
-              ? 'Үндэсний академик менторшлын платформд нэвтрэх'
-              : 'Access Mongolia\'s national academic mentorship platform'}
+              ? 'Үндэсний академик менторшлын платформ'
+              : 'Academic Peer Mentorship Platform of Mongolia'}
           </p>
         </div>
 
         {/* Card */}
-        <div className="glass-panel rounded-2xl p-6 sm:p-8 space-y-5 shadow-2xl">
+        <div className="saas-card p-6 space-y-5 shadow-sm">
           
           {/* Mode Switcher */}
-          <div className="flex rounded-lg bg-zinc-900/80 p-1 border border-white/[0.06] text-xs font-medium">
+          <div className="flex rounded-lg bg-zinc-100 p-1 border border-zinc-200 text-xs font-medium">
             <button
               type="button"
               onClick={() => { setMode('signin'); setErrorMsg(null); }}
               className={`flex-1 rounded-md py-1.5 transition-all ${
                 mode === 'signin'
-                  ? 'bg-zinc-800 text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-white text-zinc-900 shadow-sm font-semibold'
+                  : 'text-zinc-600 hover:text-zinc-900'
               }`}
             >
               {language === 'mn' ? 'Нэвтрэх' : 'Sign In'}
@@ -152,8 +135,8 @@ function LoginForm() {
               onClick={() => { setMode('signup'); setErrorMsg(null); }}
               className={`flex-1 rounded-md py-1.5 transition-all ${
                 mode === 'signup'
-                  ? 'bg-zinc-800 text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-white text-zinc-900 shadow-sm font-semibold'
+                  : 'text-zinc-600 hover:text-zinc-900'
               }`}
             >
               {language === 'mn' ? 'Бүртгүүлэх' : 'Sign Up'}
@@ -162,14 +145,14 @@ function LoginForm() {
 
           {/* Feedback */}
           {errorMsg && (
-            <div className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">
+            <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-700">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3 text-xs text-emerald-400">
+            <div className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-700">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               <span>{successMsg}</span>
             </div>
@@ -179,53 +162,53 @@ function LoginForm() {
           <form onSubmit={handleAuth} className="space-y-3.5">
             {mode === 'signup' && (
               <div className="space-y-1">
-                <label className="text-[11px] font-medium text-zinc-300">
+                <label className="text-xs font-medium text-zinc-700">
                   {language === 'mn' ? 'Таны бүтэн нэр' : 'Full Name'}
                 </label>
                 <div className="relative">
-                  <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                  <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
                   <input
                     type="text"
                     required
                     placeholder={language === 'mn' ? 'Батбаяр Тэмүүлэн' : 'Temuulen Batbayar'}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-lg border border-white/[0.08] bg-zinc-900/50 pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                    className="saas-input pl-9"
                   />
                 </div>
               </div>
             )}
 
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-700">
                 {language === 'mn' ? 'Имэйл хаяг' : 'Email Address'}
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
                 <input
                   type="email"
                   required
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-lg border border-white/[0.08] bg-zinc-900/50 pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                  className="saas-input pl-9"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-700">
                 {language === 'mn' ? 'Нууц үг' : 'Password'}
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
                 <input
                   type="password"
                   required
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-white/[0.08] bg-zinc-900/50 pl-9 pr-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                  className="saas-input pl-9"
                 />
               </div>
             </div>
@@ -233,10 +216,10 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full py-2.5 rounded-lg text-xs font-medium text-white flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+              className="btn-primary w-full py-2.5 rounded-lg text-xs font-medium flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
             >
               {loading ? (
-                <span className="animate-pulse">{language === 'mn' ? 'Түр хүлээнэ үү...' : 'Authenticating...'}</span>
+                <span>{language === 'mn' ? 'Түр хүлээнэ үү...' : 'Signing in...'}</span>
               ) : (
                 <>
                   <span>{mode === 'signin' ? (language === 'mn' ? 'Нэвтрэх' : 'Sign In') : (language === 'mn' ? 'Үргэлжлүүлэх' : 'Create Account')}</span>
@@ -246,10 +229,10 @@ function LoginForm() {
             </button>
           </form>
 
-          {/* Social */}
+          {/* Social Divider */}
           <div className="relative flex items-center justify-center">
-            <div className="w-full border-t border-white/[0.06]" />
-            <span className="bg-[#121215] px-2 text-[10px] text-zinc-500 uppercase tracking-wider">
+            <div className="w-full border-t border-zinc-200" />
+            <span className="bg-white px-2 text-[11px] text-zinc-400 uppercase tracking-wider">
               {language === 'mn' ? 'Эсвэл' : 'Or'}
             </span>
           </div>
@@ -257,7 +240,7 @@ function LoginForm() {
           <button
             onClick={handleGoogleLogin}
             type="button"
-            className="w-full flex items-center justify-center gap-2 rounded-lg border border-white/[0.08] bg-zinc-900/50 hover:bg-zinc-800/80 py-2 text-xs font-medium text-zinc-300 hover:text-white transition-all"
+            className="btn-secondary w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium"
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24">
               <path
@@ -290,7 +273,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center text-zinc-500 text-xs">
+      <div className="min-h-[calc(100vh-10rem)] flex items-center justify-center text-zinc-400 text-xs">
         Loading...
       </div>
     }>

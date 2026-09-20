@@ -1,98 +1,102 @@
 import Link from 'next/link';
-import { GraduationCap, ShieldCheck, Landmark, Heart } from 'lucide-react';
+import { GraduationCap, ShieldCheck, Mail, Heart } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/[0.08] bg-[#09090b] mt-24">
+    <footer className="border-t border-zinc-200 bg-zinc-50/50 mt-20">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           
           {/* Col 1: Mission */}
-          <div className="md:col-span-2 space-y-4">
+          <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600/10 border border-blue-500/20 text-blue-400">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-900 text-white">
                 <GraduationCap className="h-4 w-4" />
               </div>
-              <span className="text-base font-bold tracking-tight text-white">
-                Mentor<span className="text-blue-500">.mn</span>
+              <span className="text-base font-bold tracking-tight text-zinc-900">
+                Mentor<span className="text-blue-600">.mn</span>
               </span>
             </div>
-            <p className="text-xs text-zinc-400 max-w-md leading-relaxed">
-              Mongolia&apos;s national academic peer-mentorship infrastructure. Connecting ambitious students with proven peer champions through focused 1–3 week sprint cohorts. Real mastery, tangible deliverables, and cryptographically verified civic credentials.
+            <p className="text-xs text-zinc-600 max-w-sm leading-relaxed">
+              Mongolia&apos;s academic peer mentorship platform. Connecting ambitious students with proven peer champions for focused 1–3 week sprint classes with tangible deliverables.
             </p>
-            <div className="flex flex-wrap items-center gap-3 text-[11px] text-zinc-500">
+            <div className="flex items-center gap-3 text-xs text-zinc-500 pt-1">
               <span className="flex items-center gap-1">
-                <Landmark className="h-3 w-3 text-blue-400" />
-                Mongolian Educational Research Network
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                Verified Academic Credentials
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3 text-emerald-400" />
-                SHA-256 Tamper-Proof Ledger
+                <Mail className="h-3.5 w-3.5 text-zinc-400" />
+                team@mentor.mn
               </span>
             </div>
           </div>
 
-          {/* Col 2: Navigation */}
+          {/* Col 2: Platform Links */}
           <div>
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-300 mb-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 mb-3">
               Platform
             </h3>
-            <ul className="space-y-2 text-xs text-zinc-400">
+            <ul className="space-y-2 text-xs text-zinc-600">
               <li>
-                <Link href="/classes" className="hover:text-white transition-colors">
-                  Sprint Classes Directory
+                <Link href="/classes" className="hover:text-zinc-900 transition-colors">
+                  Browse Sprint Classes
                 </Link>
               </li>
               <li>
-                <Link href="/classes/create" className="hover:text-white transition-colors">
-                  Open a Sprint as Mentor
+                <Link href="/classes/create" className="hover:text-zinc-900 transition-colors">
+                  Host a Sprint as Mentor
                 </Link>
               </li>
               <li>
-                <Link href="/profile" className="hover:text-white transition-colors">
-                  Dual-Identity Profile
+                <Link href="/dashboard" className="hover:text-zinc-900 transition-colors">
+                  Student Dashboard
                 </Link>
               </li>
               <li>
-                <Link href="/ministry/audit" className="hover:text-white transition-colors">
-                  Ministry Telemetry Audit
+                <Link href="/verify/MN-EDU-2026-7A4F" className="hover:text-zinc-900 transition-colors">
+                  Verify Credentials
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 3: Institutional Tiers */}
+          {/* Col 3: Academic Domains */}
           <div>
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-300 mb-3">
-              Mentor Hierarchy
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 mb-3">
+              Popular Sprints
             </h3>
-            <ul className="space-y-2 text-xs text-zinc-400">
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
-                <span>Tier 1: Junior Mentor</span>
+            <ul className="space-y-2 text-xs text-zinc-600">
+              <li>
+                <Link href="/classes?subject=Mathematics" className="hover:text-zinc-900 transition-colors">
+                  Cambridge & Olympiad Math
+                </Link>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                <span>Tier 2: Senior Mentor</span>
+              <li>
+                <Link href="/classes?subject=Computer%20Science" className="hover:text-zinc-900 transition-colors">
+                  Python & Web Engineering
+                </Link>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
-                <span>Tier 3: Master Mentor</span>
+              <li>
+                <Link href="/classes?subject=Physics" className="hover:text-zinc-900 transition-colors">
+                  Physics Circuit Analysis
+                </Link>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                <span>Tier 4: National Laureate</span>
+              <li>
+                <Link href="/classes?subject=English" className="hover:text-zinc-900 transition-colors">
+                  SAT Prep & College Admissions
+                </Link>
               </li>
             </ul>
           </div>
 
         </div>
 
-        <div className="mt-12 border-t border-white/[0.06] pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-zinc-500">
-          <p>© 2026 Mentor.mn. National Academic Mentorship Infrastructure of Mongolia.</p>
+        <div className="mt-12 border-t border-zinc-200 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500">
+          <p>© 2026 Mentor.mn. Peer Education Network of Mongolia.</p>
           <p className="flex items-center gap-1 mt-2 sm:mt-0">
-            Engineered with <Heart className="h-3 w-3 text-red-500 fill-red-500" /> for the youth of Mongolia.
+            Made with <Heart className="h-3 w-3 text-red-500 fill-red-500" /> for Mongolian youth.
           </p>
         </div>
       </div>

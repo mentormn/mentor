@@ -2,35 +2,32 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import { useLanguage } from '@/lib/i18n';
 import { 
   GraduationCap, 
   Users, 
-  Compass, 
-  Award, 
+  Search, 
   ArrowRight, 
   CheckCircle2, 
   ShieldCheck, 
-  Flame,
+  Calendar, 
   Sparkles,
-  MapPin,
-  Calendar,
-  Layers,
-  Coins,
-  ChevronRight
+  BookOpen,
+  Clock,
+  Coins
 } from 'lucide-react';
-import { NATIONAL_TELEMETRY } from '@/lib/mockData';
-import { TIER_CONFIGS } from '@/lib/engine/tierProgression';
-import { useLanguage } from '@/lib/i18n';
-import { FormalTier } from '@/lib/types';
 
-export default function Home() {
-  const { language, t } = useLanguage();
+export default function HomePage() {
+  const router = useRouter();
+  const { language } = useLanguage();
+  const [searchQuery, setSearchQuery] = useState('');
   const [featuredClasses, setFeaturedClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadFeatured() {
+    async function loadClasses() {
       try {
         const { data, error } = await supabase
           .from('sprint_classes')
@@ -51,327 +48,299 @@ export default function Home() {
       }
     }
 
-    loadFeatured();
+    loadClasses();
   }, []);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/classes?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push('/classes');
+    }
+  };
+
   return (
-    <div className="relative space-y-20 pb-20 overflow-hidden bg-grid-pattern">
-      <div className="absolute inset-0 bg-radial-top pointer-events-none" />
+    <div className="space-y-20 pb-20">
       
       {/* Hero Section */}
-      <section className="relative pt-20 pb-16 px-4 sm:px-6 lg:px-8 text-center">
-        <div className="mx-auto max-w-4xl space-y-6">
-          
-          {/* Institutional Pill */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 py-1.5 text-xs font-semibold text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.15)]">
-            <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
-            <span>{t('heroBadge')}</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-white leading-[1.12]">
-            {t('heroTitlePrefix')}
-            <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-400 bg-clip-text text-transparent">
-              {t('heroTitleHighlight')}
-            </span>
-          </h1>
-
-          <p className="mx-auto max-w-2xl text-sm sm:text-base text-zinc-400 leading-relaxed font-normal">
-            {t('heroDesc')}
-          </p>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-            <Link
-              href="/classes"
-              className="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs font-medium text-white shadow-xl"
-            >
-              <Compass className="h-4 w-4" />
-              <span>{t('heroFindClass')}</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-
-            <Link
-              href="/classes/create"
-              className="btn-secondary w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs font-medium text-zinc-300 hover:text-white"
-            >
-              <GraduationCap className="h-4 w-4 text-blue-400" />
-              <span>{t('heroOpenClass')}</span>
-            </Link>
-          </div>
-
-          {/* Guarantee Badges */}
-          <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-[11px] text-zinc-400">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-              {t('badgeCohorts')}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-              {t('badgeDeliverables')}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-              {t('badgeCredentials')}
-            </span>
-          </div>
-
+      <section className="pt-16 pb-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center space-y-6">
+        
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3.5 py-1 text-xs font-semibold text-zinc-700">
+          <span className="h-2 w-2 rounded-full bg-blue-600" />
+          <span>{language === 'mn' ? 'Монголын үе тэнгийн академик менторшил' : 'Peer Academic Mentorship in Mongolia'}</span>
         </div>
+
+        {/* Headline */}
+        <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-zinc-900 leading-[1.12]">
+          {language === 'mn' ? (
+            <>
+              Өөрийн хичээл зүтгэлээр эзэмшсэн{' '}
+              <span className="text-blue-600">үе тэнгийнхнээсээ</span> суралц.
+            </>
+          ) : (
+            <>
+              Learn directly from students who{' '}
+              <span className="text-blue-600">actually mastered it.</span>
+            </>
+          )}
+        </h1>
+
+        {/* Subhead */}
+        <p className="max-w-2xl mx-auto text-base sm:text-lg text-zinc-600 leading-relaxed">
+          {language === 'mn'
+            ? 'Хуучирсан лекцээр цаг үрэхээ боль. Монголын шилдэг сургууль, их сургуулийн үе тэнгийн менторуудтай 1–3 долоо хоногийн богино спринт ангид (1-10 суудал) нэгдэж, бодит бүтээл хийн суралцаарай.'
+            : 'Skip passive, boring classroom lectures. Join focused 1–3 week sprint cohorts (1 to 10 seats) led by proven peer champions from Mongolia\'s top schools and universities.'}
+        </p>
+
+        {/* Search Bar */}
+        <form onSubmit={handleSearch} className="max-w-xl mx-auto pt-2">
+          <div className="flex items-center gap-2 p-1.5 rounded-xl border border-zinc-300 bg-white shadow-sm focus-within:border-zinc-900 focus-within:ring-2 focus-within:ring-zinc-900/10 transition-all">
+            <Search className="h-4 w-4 text-zinc-400 ml-2.5 shrink-0" />
+            <input
+              type="text"
+              placeholder={language === 'mn' ? 'Хичээл эсвэл сэдвээр хайх (Жишээ: Математик, SAT, Python)...' : 'Search by topic (e.g. Cambridge Math, SAT, Python, Physics)...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full text-xs sm:text-sm text-zinc-900 placeholder-zinc-400 bg-transparent outline-none"
+            />
+            <button
+              type="submit"
+              className="btn-primary px-4 py-2 rounded-lg text-xs font-medium shrink-0"
+            >
+              {language === 'mn' ? 'Хайх' : 'Search'}
+            </button>
+          </div>
+        </form>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <Link
+            href="/classes"
+            className="w-full sm:w-auto btn-primary inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-xs font-medium shadow-sm"
+          >
+            <span>{language === 'mn' ? 'Бүх хичээлүүдийг үзэх' : 'Explore All Sprints'}</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+
+          <Link
+            href="/classes/create"
+            className="w-full sm:w-auto btn-secondary inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-xs font-medium"
+          >
+            <GraduationCap className="h-4 w-4 text-zinc-600" />
+            <span>{language === 'mn' ? 'Ментороор хичээл нээх' : 'Host a Sprint as Mentor'}</span>
+          </Link>
+        </div>
+
       </section>
 
-      {/* Live Flywheel Telemetry Stats */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="glass-panel rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-white/[0.06]">
-            <div>
-              <div className="flex items-center gap-2">
-                <Flame className="h-5 w-5 text-amber-400" />
-                <h2 className="text-sm sm:text-base font-bold text-white">
-                  {t('flywheelTitle')}
-                </h2>
-              </div>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                {t('flywheelSubtitle')}
-              </p>
-            </div>
-            <Link
-              href="/ministry/audit"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300"
-            >
-              <span>{t('flywheelAuditLink')}</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
-                {t('statActiveClasses')}
-              </p>
-              <p className="text-2xl sm:text-3xl font-bold text-white">
-                {NATIONAL_TELEMETRY.activeClasses}
-              </p>
-              <p className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                {t('statActiveSub')}
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
-                {t('statStudents')}
-              </p>
-              <p className="text-2xl sm:text-3xl font-bold text-white">
-                {NATIONAL_TELEMETRY.totalStudentsTaught}
-              </p>
-              <p className="text-[11px] text-zinc-500">{t('statStudentsSub')}</p>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
-                {t('statAimags')}
-              </p>
-              <p className="text-2xl sm:text-3xl font-bold text-blue-400">
-                {NATIONAL_TELEMETRY.aimagsReached} / 21
-              </p>
-              <p className="text-[11px] text-zinc-500">{t('statAimagsSub')}</p>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
-                {t('statMultiplier')}
-              </p>
-              <p className="text-2xl sm:text-3xl font-bold text-amber-400">
-                {NATIONAL_TELEMETRY.knowledgeMultiplier}
-              </p>
-              <p className="text-[11px] text-zinc-500">{t('statMultiplierSub')}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* The 3-Step Flywheel */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            {t('howItWorksTitle')}
-          </h2>
-          <p className="mx-auto max-w-xl text-xs sm:text-sm text-zinc-400">
-            {t('howItWorksSubtitle')}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          <div className="glass-panel-interactive rounded-2xl p-6 space-y-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-sm">
-              01
-            </div>
-            <h3 className="text-sm font-bold text-white">
-              {t('step1Title')}
-            </h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              {t('step1Desc')}
+      {/* Trust & Stats Bar */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div>
+            <p className="text-2xl sm:text-3xl font-bold text-zinc-900">28</p>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              {language === 'mn' ? 'Идэвхтэй спринт ангиуд' : 'Active Sprint Classes'}
             </p>
           </div>
-
-          <div className="glass-panel-interactive rounded-2xl p-6 space-y-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-sm">
-              02
-            </div>
-            <h3 className="text-sm font-bold text-white">
-              {t('step2Title')}
-            </h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              {t('step2Desc')}
+          <div>
+            <p className="text-2xl sm:text-3xl font-bold text-zinc-900">94</p>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              {language === 'mn' ? 'Суралцсан сурагчид' : 'Students Guided'}
             </p>
           </div>
-
-          <div className="glass-panel-interactive rounded-2xl p-6 space-y-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold text-sm">
-              03
-            </div>
-            <h3 className="text-sm font-bold text-white">
-              {t('step3Title')}
-            </h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              {t('step3Desc')}
+          <div>
+            <p className="text-2xl sm:text-3xl font-bold text-zinc-900">16</p>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              {language === 'mn' ? 'Хамрагдсан 21 аймаг' : 'Aimags Reached'}
             </p>
           </div>
-
+          <div>
+            <p className="text-2xl sm:text-3xl font-bold text-zinc-900">1–10</p>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              {language === 'mn' ? 'Суудлын хязгаар (Бичил анги)' : 'Seats per Cohort'}
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Featured Sprints */}
-      {featuredClasses.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-                {t('openClassesTitle')}
-              </h2>
-              <p className="text-xs text-zinc-400">{t('openClassesSub')}</p>
-            </div>
-            <Link
-              href="/classes"
-              className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1"
-            >
-              <span>{t('browseAllClasses')}</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-zinc-900">
+              {language === 'mn' ? 'Нээлттэй спринт хичээлүүд' : 'Open Sprint Classes'}
+            </h2>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              {language === 'mn' ? 'Удахгүй эхлэх, сул суудалтай ангиуд' : 'Upcoming cohorts with open seats'}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {featuredClasses.map((cls) => {
-              const enrollCount = (cls.class_enrollments || []).length;
-              const seatsLeft = cls.max_seats - enrollCount;
-              const tierKey = (cls.mentor_tier || 'JUNIOR_MENTOR') as FormalTier;
-              const tierConfig = TIER_CONFIGS[tierKey] || TIER_CONFIGS['JUNIOR_MENTOR'];
+          <Link
+            href="/classes"
+            className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+          >
+            <span>{language === 'mn' ? 'Бүгдийг үзэх' : 'View all'}</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
 
-              return (
-                <div
-                  key={cls.id}
-                  className="glass-panel-interactive rounded-2xl p-5 sm:p-6 flex flex-col justify-between group"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-[11px] font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md">
-                        {cls.subject}
-                      </span>
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${tierConfig.badgeClass}`}
-                      >
-                        <Sparkles className="h-2.5 w-2.5" />
-                        {language === 'mn' ? tierConfig.titleMn : tierConfig.titleEn}
-                      </span>
-                    </div>
+        {/* Classes Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {featuredClasses.map((cls) => {
+            const enrollCount = (cls.class_enrollments || []).length;
+            const seatsLeft = cls.max_seats - enrollCount;
 
-                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-blue-300 transition-colors line-clamp-2">
-                      {cls.title}
-                    </h3>
-
-                    <p className="text-xs text-zinc-400 line-clamp-2">
-                      {cls.description}
-                    </p>
-
-                    <div className="pt-2 border-t border-white/[0.06] space-y-1.5 text-xs text-zinc-400">
-                      <div className="flex items-center justify-between">
-                        <span>Mentor: <strong className="text-zinc-200">{cls.mentor_name}</strong></span>
-                        <span className="text-[11px] text-zinc-500">{cls.mentor_school}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>{cls.duration_weeks} Weeks • {cls.schedule_summary}</span>
-                        <span className="text-emerald-400 font-medium">
-                          {!cls.price_mnt || cls.price_mnt === 0 ? t('priceFree') : `${cls.price_mnt.toLocaleString()} ₮`}
-                        </span>
-                      </div>
-                    </div>
+            return (
+              <div
+                key={cls.id}
+                className="saas-card p-5 flex flex-col justify-between"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                      {cls.subject}
+                    </span>
+                    <span className="text-zinc-500 text-[11px]">
+                      {cls.curriculum}
+                    </span>
                   </div>
 
-                  <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between">
-                    <div className="text-xs">
-                      <span className="font-semibold text-white">
-                        {enrollCount} / {cls.max_seats}
-                      </span>{' '}
-                      <span className="text-zinc-500 text-[11px]">{t('seatsFilled')}</span>
-                    </div>
+                  <h3 className="text-sm font-bold text-zinc-900 leading-snug line-clamp-2">
+                    {cls.title}
+                  </h3>
 
-                    <Link
-                      href={`/class/${cls.id}`}
-                      className="btn-primary px-3 py-1.5 text-xs font-medium text-white rounded-lg"
-                    >
-                      {t('viewClass')}
-                    </Link>
+                  <p className="text-xs text-zinc-600 line-clamp-2 leading-relaxed">
+                    {cls.description}
+                  </p>
+
+                  <div className="pt-3 border-t border-zinc-100 space-y-1 text-xs text-zinc-600">
+                    <div className="flex items-center justify-between">
+                      <span>Mentor: <strong className="text-zinc-900">{cls.mentor_name}</strong></span>
+                      <span className="text-zinc-500 text-[11px]">{cls.mentor_school}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>{cls.duration_weeks} {language === 'mn' ? 'долоо хоног' : 'weeks'}</span>
+                      <span className="font-semibold text-zinc-900">
+                        {!cls.price_mnt || cls.price_mnt === 0 ? (language === 'mn' ? 'Үнэгүй (0 ₮)' : 'Free') : `${cls.price_mnt.toLocaleString()} ₮`}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
-      {/* Formal Tier Distinction Showcase */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
+                <div className="mt-5 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
+                  <span className="text-zinc-500">
+                    {enrollCount} / {cls.max_seats} {language === 'mn' ? 'суудал дүүрсэн' : 'seats filled'}
+                  </span>
+
+                  <Link
+                    href={`/class/${cls.id}`}
+                    className="btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium"
+                  >
+                    {language === 'mn' ? 'Дэлгэрэнгүй' : 'View Class'}
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* How It Works (3 Steps) */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-1 text-xs font-semibold text-blue-400 uppercase tracking-wider">
-            <Award className="h-3.5 w-3.5" />
-            <span>{t('tiersTitle')}</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            {t('tiersTitle')}
+          <h2 className="text-2xl font-bold text-zinc-900">
+            {language === 'mn' ? 'Мэдлэгийн хүрд хэрхэн ажилладаг вэ?' : 'How Mentor.mn Works'}
           </h2>
-          <p className="mx-auto max-w-xl text-xs sm:text-sm text-zinc-400">
-            {t('tiersSub')}
+          <p className="text-xs sm:text-sm text-zinc-600 max-w-lg mx-auto">
+            {language === 'mn'
+              ? 'Сурагчид бие биенээ хөгжүүлж, бодит бүтээл хийх тогтолцоо'
+              : 'A transparent peer-driven system focused on tangible mastery'}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {Object.values(TIER_CONFIGS).map((tier) => (
-            <div
-              key={tier.tier}
-              className="glass-panel-interactive rounded-2xl p-5 sm:p-6 space-y-3 flex flex-col justify-between"
-            >
-              <div className="space-y-2.5">
-                <span
-                  className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold uppercase border ${tier.badgeClass}`}
-                >
-                  <Sparkles className="h-2.5 w-2.5" />
-                  {language === 'mn' ? tier.titleMn : tier.titleEn}
-                </span>
-                <p className="text-[11px] font-medium text-zinc-400">
-                  {language === 'mn' ? tier.titleEn : tier.titleMn}
-                </p>
-                <p className="text-xs text-zinc-300 leading-relaxed">
-                  {tier.description}
-                </p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="saas-card p-6 space-y-3">
+            <div className="h-8 w-8 rounded-lg bg-zinc-100 flex items-center justify-center font-bold text-xs text-zinc-800">
+              1
+            </div>
+            <h3 className="text-sm font-bold text-zinc-900">
+              {language === 'mn' ? 'Спринт хичээлээ сонгох' : '1. Claim Your Seat'}
+            </h3>
+            <p className="text-xs text-zinc-600 leading-relaxed">
+              {language === 'mn'
+                ? 'Өөрийн сонирхсон сэдвээр (Олимпиад, SAT, Кодчилол) 1–10 суудлын бичил ангиас сонгон шууд суудал захиална.'
+                : 'Browse 1–3 week micro-cohorts (1 to 10 seats) in Math, SAT, Coding, and Physics led by top peer mentors.'}
+            </p>
+          </div>
 
-              <div className="pt-3 border-t border-white/[0.06] text-[11px] text-zinc-500 space-y-0.5">
-                <div>Min Classes: <strong className="text-zinc-300">{tier.minClasses}</strong></div>
-                <div>Min Students: <strong className="text-zinc-300">{tier.minStudents}</strong></div>
-                <div>Min XP: <strong className="text-zinc-300">{tier.minXp} XP</strong></div>
+          <div className="saas-card p-6 space-y-3">
+            <div className="h-8 w-8 rounded-lg bg-zinc-100 flex items-center justify-center font-bold text-xs text-zinc-800">
+              2
+            </div>
+            <h3 className="text-sm font-bold text-zinc-900">
+              {language === 'mn' ? 'Бодит бүтээл хийж эзэмших' : '2. Build Tangible Artifacts'}
+            </h3>
+            <p className="text-xs text-zinc-600 leading-relaxed">
+              {language === 'mn'
+                ? 'Лекц сонсохоос илүүтэй долоо хоног бүр бодит бодлого бодох, код бичих эсвэл судалгаа хийж ментороороо батлуулна.'
+                : 'No passive lectures. Submit working codebases, solved olympiad proofs, or project writeups for 1-on-1 mentor verification.'}
+            </p>
+          </div>
+
+          <div className="saas-card p-6 space-y-3">
+            <div className="h-8 w-8 rounded-lg bg-zinc-100 flex items-center justify-center font-bold text-xs text-zinc-800">
+              3
+            </div>
+            <h3 className="text-sm font-bold text-zinc-900">
+              {language === 'mn' ? 'Дүү нартаа заах & Зэрэг ахих' : '3. Pay It Forward & Mentor'}
+            </h3>
+            <p className="text-xs text-zinc-600 leading-relaxed">
+              {language === 'mn'
+                ? 'Хичээлээ амжилттай дүүргэсэн сурагч өөрөө дараагийн дүү нартаа зааж өгөх эрхтэй болж албан ёсны зэрэг ахина.'
+                : 'Graduated students unlock mentor credentials, hosting their own micro-cohorts and guiding younger peers across Mongolia.'}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <h2 className="text-xl font-bold text-zinc-900 text-center">
+          {language === 'mn' ? 'Сурагч, менторуудын сэтгэгдэл' : 'Trusted by Students & Mentors'}
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="saas-card p-6 space-y-3">
+            <p className="text-xs sm:text-sm text-zinc-700 italic leading-relaxed">
+              &ldquo;Багшийн танхимын лекцээс илүүтэй саяхан олимпиадад амжилттай оролцсон ах эгч нар маань яг хаана гацдагийг маш сайн ойлгож, шууд бодлогын гол санааг хэлж өгсөн нь үнэхээр тус болсон.&rdquo;
+            </p>
+            <div className="flex items-center gap-3 pt-2">
+              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-700">
+                М
+              </div>
+              <div>
+                <p className="text-xs font-bold text-zinc-900">Мөнхжин А.</p>
+                <p className="text-[11px] text-zinc-500">Ховд 1-р сургууль, 11-р анги</p>
               </div>
             </div>
-          ))}
+          </div>
+
+          <div className="saas-card p-6 space-y-3">
+            <p className="text-xs sm:text-sm text-zinc-700 italic leading-relaxed">
+              &ldquo;Өөрөө сурсан зүйлээ 3 дүү нартаа зааж өгөх үед өөрийнхөө ойлголт улам батжиж, өөртөө итгэлтэй болдог юм байна. Албан ёсны сертификат нь гадаадын их сургуулийн анкет бөглөхөд маш том давуу тал болсон.&rdquo;
+            </p>
+            <div className="flex items-center gap-3 pt-2">
+              <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
+                Т
+              </div>
+              <div>
+                <p className="text-xs font-bold text-zinc-900">Тэмүүлэн Б.</p>
+                <p className="text-[11px] text-zinc-500">1-р сургууль, Ахлах Ментор</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

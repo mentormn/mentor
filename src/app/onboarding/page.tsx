@@ -84,7 +84,6 @@ export default function OnboardingPage() {
       }
       setUserId(session.user.id);
 
-      // Fetch existing profile if partially completed
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
@@ -146,7 +145,7 @@ export default function OnboardingPage() {
 
       if (error) throw error;
 
-      router.push('/profile');
+      router.push('/dashboard');
       router.refresh();
     } catch (err: any) {
       alert(err.message || 'Error updating profile');
@@ -156,283 +155,230 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-grid-pattern">
-      <div className="absolute inset-0 bg-radial-glow pointer-events-none" />
-
-      <div className="relative w-full max-w-xl space-y-6">
-        
-        {/* Step Indicator Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>{language === 'mn' ? `АЛХАМ ${step} / 3` : `STEP ${step} OF 3`}</span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            {t('onboardingTitle')}
+    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 space-y-8">
+      
+      {/* Step Indicator */}
+      <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
+        <div>
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            {language === 'mn' ? `Алхам ${step} / 3` : `Step ${step} of 3`}
+          </span>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 mt-1">
+            {step === 1 && (language === 'mn' ? 'Таны сургууль & байршил' : 'School & Location')}
+            {step === 2 && (language === 'mn' ? 'Сонирхож буй хичээлүүд' : 'Subject Interests')}
+            {step === 3 && (language === 'mn' ? 'Ментор болох сонирхол' : 'Mentorship & Goals')}
           </h1>
-          <p className="text-xs text-zinc-400">
-            {t('onboardingSub')}
-          </p>
         </div>
-
-        {/* Progress Bar */}
-        <div className="w-full bg-zinc-800/80 rounded-full h-1.5 overflow-hidden">
-          <div 
-            className="bg-blue-500 h-full transition-all duration-300 ease-out"
-            style={{ width: `${(step / 3) * 100}%` }}
-          />
+        <div className="flex gap-1.5">
+          {[1, 2, 3].map((s) => (
+            <div
+              key={s}
+              className={`h-2 rounded-full transition-all ${
+                s === step ? 'w-8 bg-zinc-900' : s < step ? 'w-2 bg-emerald-600' : 'w-2 bg-zinc-200'
+              }`}
+            />
+          ))}
         </div>
-
-        {/* Card Content */}
-        <div className="glass-panel rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl">
-          
-          {/* STEP 1: Academic Identity */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-white/[0.06]">
-                <School className="h-4 w-4 text-blue-400" />
-                <h2 className="text-sm font-semibold text-white">{t('step1Identity')}</h2>
-              </div>
-
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-zinc-300">
-                    {t('fieldSchool')}
-                  </label>
-                  <select
-                    value={school}
-                    onChange={(e) => setSchool(e.target.value)}
-                    className="w-full rounded-lg border border-white/[0.08] bg-zinc-900/70 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="">-- Сургуулиа сонгоно уу --</option>
-                    {COMMON_SCHOOLS.map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {school === 'Бусад / Өөр сургууль (Other)' && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-zinc-300">
-                      Сургуулийн нэрээ бичнэ үү
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Жишээ: 84-р сургууль"
-                      value={customSchool}
-                      onChange={(e) => setCustomSchool(e.target.value)}
-                      className="w-full rounded-lg border border-white/[0.08] bg-zinc-900/70 px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-zinc-300">
-                      {t('fieldGrade')}
-                    </label>
-                    <select
-                      value={grade}
-                      onChange={(e) => setGrade(e.target.value)}
-                      className="w-full rounded-lg border border-white/[0.08] bg-zinc-900/70 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
-                    >
-                      {GRADES.map((g) => (
-                        <option key={g} value={g}>{g}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-zinc-300">
-                      {t('fieldCity')}
-                    </label>
-                    <input
-                      type="text"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="Улаанбаатар / Дархан / Ховд"
-                      className="w-full rounded-lg border border-white/[0.08] bg-zinc-900/70 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  className="btn-primary px-4 py-2 rounded-lg text-xs font-medium text-white flex items-center gap-2"
-                >
-                  <span>{t('saveAndContinue')}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 2: Focus & Learning Goals */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-white/[0.06]">
-                <BookOpen className="h-4 w-4 text-blue-400" />
-                <h2 className="text-sm font-semibold text-white">{t('step2Focus')}</h2>
-              </div>
-
-              <p className="text-xs text-zinc-400">
-                {language === 'mn'
-                  ? 'Та Mentor.mn дээр ямар чиглэлээр гүнзгийрүүлэн суралцахыг хүсэж байна вэ? (Олон сонголттой)'
-                  : 'Which subjects do you want to master through peer sprints? (Select all that apply)'}
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {SUBJECT_OPTIONS.map((sub) => {
-                  const active = learningGoals.includes(sub);
-                  return (
-                    <button
-                      key={sub}
-                      type="button"
-                      onClick={() => toggleLearningGoal(sub)}
-                      className={`text-left p-2.5 rounded-lg border text-xs transition-all ${
-                        active
-                          ? 'border-blue-500/50 bg-blue-500/10 text-white font-medium shadow-[0_0_10px_rgba(59,130,246,0.15)]'
-                          : 'border-white/[0.08] bg-zinc-900/40 text-zinc-400 hover:text-zinc-200 hover:border-white/[0.15]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="line-clamp-1">{sub}</span>
-                        {active && <CheckCircle2 className="h-3.5 w-3.5 text-blue-400 shrink-0 ml-1" />}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="pt-4 flex justify-between">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="btn-secondary px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-1.5"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  <span>Буцах</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  className="btn-primary px-4 py-2 rounded-lg text-xs font-medium text-white flex items-center gap-2"
-                >
-                  <span>{t('saveAndContinue')}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: Dual-Identity & Mentor Verification */}
-          {step === 3 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-white/[0.06]">
-                <Award className="h-4 w-4 text-blue-400" />
-                <h2 className="text-sm font-semibold text-white">{t('step3Mentor')}</h2>
-              </div>
-
-              {/* Mentor Application Toggle */}
-              <div className="rounded-xl border border-white/[0.08] bg-zinc-900/60 p-4 space-y-3">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={wantsToMentor}
-                    onChange={(e) => setWantsToMentor(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-zinc-700 text-blue-600 focus:ring-blue-500 bg-zinc-800"
-                  />
-                  <div>
-                    <span className="text-xs font-semibold text-white block">
-                      {t('applyAsMentorLabel')}
-                    </span>
-                    <span className="text-[11px] text-zinc-400 leading-relaxed block mt-0.5">
-                      {language === 'mn'
-                        ? 'Өөрийн эзэмшсэн сэдвээр 1–3 долоо хоногийн спринт хичээл нээж, дүү нартаа заан албан ёсны зэрэг дэв авах боломж.'
-                        : 'Host 1–3 week sprint classes in subjects you mastered, guide younger peers, and earn formal Ministry credentials.'}
-                    </span>
-                  </div>
-                </label>
-
-                {wantsToMentor && (
-                  <div className="pt-3 border-t border-white/[0.06] space-y-3">
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-medium text-zinc-300">
-                        {t('fieldCanMentor')}
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                        {SUBJECT_OPTIONS.map((sub) => {
-                          const active = specializations.includes(sub);
-                          return (
-                            <button
-                              key={sub}
-                              type="button"
-                              onClick={() => toggleSpecialization(sub)}
-                              className={`text-left p-2 rounded-md border text-[11px] transition-all ${
-                                active
-                                  ? 'border-blue-500/50 bg-blue-500/10 text-white font-medium'
-                                  : 'border-white/[0.06] bg-zinc-900/40 text-zinc-400 hover:text-zinc-200'
-                              }`}
-                            >
-                              <span className="line-clamp-1">{sub}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-medium text-zinc-300">
-                        {t('fieldAchievements')}
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={achievements}
-                        onChange={(e) => setAchievements(e.target.value)}
-                        placeholder={language === 'mn'
-                          ? 'Жишээ: \n- Улсын физикийн олимпиадын мөнгөн медаль\n- SAT 1520 (Math 800)\n- IELTS 7.5'
-                          : 'Example:\n- National Physics Olympiad Silver Medal\n- SAT 1520 (Math 800)\n- IELTS 7.5'}
-                        className="w-full rounded-lg border border-white/[0.08] bg-zinc-900/70 p-2.5 text-xs text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-4 flex justify-between">
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  className="btn-secondary px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-1.5"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  <span>Буцах</span>
-                </button>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={handleComplete}
-                  className="btn-primary px-5 py-2 rounded-lg text-xs font-medium text-white flex items-center gap-2 disabled:opacity-50"
-                >
-                  {loading ? (
-                    <span className="animate-pulse">Хадгалж байна...</span>
-                  ) : (
-                    <>
-                      <span>{t('completeOnboarding')}</span>
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
-        </div>
-
       </div>
+
+      {/* Step 1: School & Location */}
+      {step === 1 && (
+        <div className="saas-card p-6 sm:p-8 space-y-6">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-700">
+              {language === 'mn' ? 'Сургууль' : 'School or University'}
+            </label>
+            <select
+              value={school}
+              onChange={(e) => setSchool(e.target.value)}
+              className="saas-input"
+            >
+              <option value="">{language === 'mn' ? 'Сургуулиа сонгоно уу...' : 'Select your school...'}</option>
+              {COMMON_SCHOOLS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          {school === 'Бусад / Өөр сургууль (Other)' && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-700">
+                {language === 'mn' ? 'Сургуулийн нэр' : 'Enter school name'}
+              </label>
+              <input
+                type="text"
+                placeholder="Жишээ нь: Дархан 1-р сургууль"
+                value={customSchool}
+                onChange={(e) => setCustomSchool(e.target.value)}
+                className="saas-input"
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-700">
+                {language === 'mn' ? 'Анги / Түвшин' : 'Grade / Year'}
+              </label>
+              <select
+                value={grade}
+                onChange={(e) => setGrade(e.target.value)}
+                className="saas-input"
+              >
+                {GRADES.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-700">
+                {language === 'mn' ? 'Аймаг / Хот' : 'Province / City'}
+              </label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="saas-input"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="btn-primary px-5 py-2 text-xs font-medium text-white inline-flex items-center gap-2"
+            >
+              <span>{language === 'mn' ? 'Дараах' : 'Next'}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 2: Learning Goals */}
+      {step === 2 && (
+        <div className="saas-card p-6 sm:p-8 space-y-6">
+          <p className="text-xs text-zinc-500">
+            {language === 'mn'
+              ? 'Та ямар чиглэлээр өөрийгөө хөгжүүлэх, олимпиад шалгалтад бэлдэхийг хүсэж байна вэ?'
+              : 'Select the subjects or areas you want to master in small sprints:'}
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {SUBJECT_OPTIONS.map((sub) => {
+              const selected = learningGoals.includes(sub);
+              return (
+                <button
+                  key={sub}
+                  type="button"
+                  onClick={() => toggleLearningGoal(sub)}
+                  className={`p-3.5 rounded-xl border text-left text-xs font-medium transition-all ${
+                    selected
+                      ? 'border-zinc-900 bg-zinc-900 text-white shadow-sm'
+                      : 'border-zinc-200 bg-zinc-50/50 text-zinc-700 hover:bg-zinc-100'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{sub}</span>
+                    {selected && <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between pt-4">
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="btn-secondary px-4 py-2 text-xs font-medium text-zinc-700"
+            >
+              {language === 'mn' ? 'Буцах' : 'Back'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStep(3)}
+              className="btn-primary px-5 py-2 text-xs font-medium text-white inline-flex items-center gap-2"
+            >
+              <span>{language === 'mn' ? 'Дараах' : 'Next'}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Mentor Option */}
+      {step === 3 && (
+        <div className="saas-card p-6 sm:p-8 space-y-6">
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 space-y-3">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={wantsToMentor}
+                onChange={(e) => setWantsToMentor(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+              />
+              <div>
+                <div className="text-xs font-bold text-zinc-900">
+                  {language === 'mn' ? 'Би бусдад заах, ментор болох сонирхолтой' : 'I want to mentor other students'}
+                </div>
+                <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">
+                  {language === 'mn'
+                    ? 'Олимпиад, улсын шалгалт, тэтгэлэг авсан туршлагаасаа дүү нартаа зааж албан ёсны батламж, тэтгэлэг авах боломжтой.'
+                    : 'Teach younger scholars, earn verified teaching credentials, and help students across 21 provinces.'}
+                </p>
+              </div>
+            </label>
+          </div>
+
+          {wantsToMentor && (
+            <div className="space-y-4 animate-in fade-in">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-zinc-700">
+                  {language === 'mn' ? 'Гаргасан амжилтууд (Мөр бүрт нэг амжилт)' : 'Key Academic Achievements (One per line)'}
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Жишээ нь: Улсын Математикийн олимпиад Хүрэл медаль 2024&#10;SAT Math 800"
+                  value={achievements}
+                  onChange={(e) => setAchievements(e.target.value)}
+                  className="saas-input"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-4">
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="btn-secondary px-4 py-2 text-xs font-medium text-zinc-700"
+            >
+              {language === 'mn' ? 'Буцах' : 'Back'}
+            </button>
+
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleComplete}
+              className="btn-primary px-6 py-2 text-xs font-medium text-white inline-flex items-center gap-2"
+            >
+              {loading ? (
+                <span>{language === 'mn' ? 'Хадгалж байна...' : 'Saving...'}</span>
+              ) : (
+                <>
+                  <span>{language === 'mn' ? 'Бүртгэл дуусгах' : 'Complete Profile'}</span>
+                  <CheckCircle2 className="h-4 w-4" />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

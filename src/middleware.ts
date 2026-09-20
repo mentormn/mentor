@@ -34,11 +34,22 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Protect private routes if not logged in
-  const protectedRoutes = ['/classes/create', '/onboarding'];
-  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+  // If user is already authenticated and visits /login, redirect to /dashboard
+  if (pathname === '/login' && user) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
+  }
 
-  if (isProtectedRoute && !user) {
+  // Public routes that unauthenticated visitors can access
+  const isPublicRoute =
+    pathname === '/' ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/verify');
+
+  // Protect all internal application routes
+  if (!isPublicRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirectTo', pathname);

@@ -1,345 +1,427 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
 import { useLanguage } from '@/lib/i18n';
 import { 
   GraduationCap, 
-  Users, 
-  Search, 
-  ArrowRight, 
-  CheckCircle2, 
   ShieldCheck, 
-  Calendar, 
+  ArrowRight, 
+  Search, 
+  CheckCircle2, 
+  Award, 
+  Users, 
+  BookOpen, 
+  Lock, 
   Sparkles,
-  BookOpen,
-  Clock,
-  Coins
+  HelpCircle,
+  ExternalLink,
+  Target,
+  FileCheck
 } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
   const { language } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [featuredClasses, setFeaturedClasses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [certSearch, setCertSearch] = useState('');
 
-  useEffect(() => {
-    async function loadClasses() {
-      try {
-        const { data, error } = await supabase
-          .from('sprint_classes')
-          .select(`
-            *,
-            class_enrollments (id)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(3);
-
-        if (!error && data && data.length > 0) {
-          setFeaturedClasses(data);
-        }
-      } catch (err) {
-        console.error('Error loading featured classes:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadClasses();
-  }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
+  const handleVerifySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/classes?search=${encodeURIComponent(searchQuery.trim())}`);
+    if (certSearch.trim()) {
+      router.push(`/verify/${encodeURIComponent(certSearch.trim())}`);
     } else {
-      router.push('/classes');
+      router.push('/verify');
     }
   };
 
   return (
-    <div className="space-y-20 pb-20">
+    <div className="space-y-24 pb-20">
       
-      {/* Hero Section */}
-      <section className="pt-16 pb-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center space-y-6">
+      {/* 1. HERO SECTION: Introduction & Purpose */}
+      <section className="relative pt-12 pb-8 sm:pt-20 sm:pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center space-y-6">
         
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3.5 py-1 text-xs font-semibold text-zinc-700">
-          <span className="h-2 w-2 rounded-full bg-blue-600" />
-          <span>{language === 'mn' ? 'Монголын үе тэнгийн академик менторшил' : 'Peer Academic Mentorship in Mongolia'}</span>
+        <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3.5 py-1 text-xs font-medium text-zinc-800 shadow-sm">
+          <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>{language === 'mn' ? 'Монгол Улсын Үндэсний Академик Дэд Бүтэц' : 'National Academic Peer Mentorship Infrastructure'}</span>
         </div>
 
-        {/* Headline */}
-        <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-zinc-900 leading-[1.12]">
+        {/* Main Headline */}
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 leading-[1.15]">
           {language === 'mn' ? (
             <>
-              Өөрийн хичээл зүтгэлээр эзэмшсэн{' '}
-              <span className="text-blue-600">үе тэнгийнхнээсээ</span> суралц.
+              Монголын шилдэг оюутнууд <br />
+              <span className="text-zinc-500">дүү нартаа заана.</span>
             </>
           ) : (
             <>
-              Learn directly from students who{' '}
-              <span className="text-blue-600">actually mastered it.</span>
+              Where Mongolia&apos;s brightest <br />
+              <span className="text-zinc-500">teach the next generation.</span>
             </>
           )}
         </h1>
 
-        {/* Subhead */}
-        <p className="max-w-2xl mx-auto text-base sm:text-lg text-zinc-600 leading-relaxed">
+        {/* Subtitle */}
+        <p className="text-base sm:text-lg text-zinc-600 max-w-2xl mx-auto leading-relaxed">
           {language === 'mn'
-            ? 'Хуучирсан лекцээр цаг үрэхээ боль. Монголын шилдэг сургууль, их сургуулийн үе тэнгийн менторуудтай 1–3 долоо хоногийн богино спринт ангид (1-10 суудал) нэгдэж, бодит бүтээл хийн суралцаарай.'
-            : 'Skip passive, boring classroom lectures. Join focused 1–3 week sprint cohorts (1 to 10 seats) led by proven peer champions from Mongolia\'s top schools and universities.'}
+            ? 'Олон улсын олимпиадын медальтнууд, дэлхийн шилдэг их сургуулийн оюутнууд 21 аймгийн сурагчдад 1–4 долоо хоногийн бичил ангиар гүнзгийрүүлэн зааж, их дээд сургуульд хүчинтэй албан ёсны батламж олгох платформ.'
+            : 'Connecting ambitious students across Mongolia with verified olympiad medalists and top university scholars for intensive 1–4 week academic sprints with cryptographically verifiable credentials.'}
         </p>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="max-w-xl mx-auto pt-2">
-          <div className="flex items-center gap-2 p-1.5 rounded-xl border border-zinc-300 bg-white shadow-sm focus-within:border-zinc-900 focus-within:ring-2 focus-within:ring-zinc-900/10 transition-all">
-            <Search className="h-4 w-4 text-zinc-400 ml-2.5 shrink-0" />
-            <input
-              type="text"
-              placeholder={language === 'mn' ? 'Хичээл эсвэл сэдвээр хайх (Жишээ: Математик, SAT, Python)...' : 'Search by topic (e.g. Cambridge Math, SAT, Python, Physics)...'}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full text-xs sm:text-sm text-zinc-900 placeholder-zinc-400 bg-transparent outline-none"
-            />
+        {/* Primary Action Buttons */}
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/login"
+            className="btn-primary w-full sm:w-auto px-6 py-3 text-sm font-medium text-white shadow-sm flex items-center justify-center gap-2 rounded-xl"
+          >
+            <span>{language === 'mn' ? 'Платформд нэвтрэх' : 'Sign In to Platform'}</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/verify"
+            className="btn-secondary w-full sm:w-auto px-6 py-3 text-sm font-medium text-zinc-800 flex items-center justify-center gap-2 rounded-xl"
+          >
+            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+            <span>{language === 'mn' ? 'Батламж шалгах' : 'Verify Certificate'}</span>
+          </Link>
+        </div>
+
+        {/* Platform Key Stats */}
+        <div className="pt-12 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-zinc-200 text-left">
+          <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-100">
+            <div className="text-2xl font-bold text-zinc-900">1–10</div>
+            <div className="text-xs text-zinc-500 mt-0.5">
+              {language === 'mn' ? 'Суудалтай бичил ангиуд' : 'Seats per cohort pod'}
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-100">
+            <div className="text-2xl font-bold text-zinc-900">100%</div>
+            <div className="text-xs text-zinc-500 mt-0.5">
+              {language === 'mn' ? 'Бодит бүтээлээр баталгаажсан' : 'Deliverable-backed proof'}
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-100">
+            <div className="text-2xl font-bold text-zinc-900">SHA-256</div>
+            <div className="text-xs text-zinc-500 mt-0.5">
+              {language === 'mn' ? 'Криптограф баталгаажуулалт' : 'Tamper-proof digital seal'}
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-100">
+            <div className="text-2xl font-bold text-zinc-900">21 Aimag</div>
+            <div className="text-xs text-zinc-500 mt-0.5">
+              {language === 'mn' ? 'Хүртээмжтэй үндэсний сүлжээ' : 'Nationwide rural reach'}
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      {/* 2. INSTANT CERTIFICATE VERIFICATION PORTAL (Publicly Accessible) */}
+      <section className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+        <div className="saas-card p-6 sm:p-10 bg-gradient-to-b from-white to-zinc-50/70 space-y-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 pb-5">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-emerald-700">
+                <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                <span className="text-xs font-bold uppercase tracking-wider">
+                  {language === 'mn' ? 'Нийтийн шалгалтын портал' : 'Public Verification Engine'}
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900">
+                {language === 'mn' ? 'Батламжийн үнэн зөвийг шалгах' : 'Verify Certificate Authenticity'}
+              </h2>
+              <p className="text-xs text-zinc-500">
+                {language === 'mn' 
+                  ? 'Эцэг эхчүүд, сургуулийн удирдлагууд болон их сургуулийн элсэлтийн хороонд зориулагдсан нээлттэй шалгалт.' 
+                  : 'Open verification tool for parents, high schools, and university admissions officers worldwide.'}
+              </p>
+            </div>
+            <Link
+              href="/verify"
+              className="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 self-start sm:self-auto"
+            >
+              <span>{language === 'mn' ? 'Дэлгэрэнгүй портал' : 'Full Portal'}</span>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <form onSubmit={handleVerifySubmit} className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-3 h-4 w-4 text-zinc-400" />
+              <input
+                type="text"
+                placeholder={language === 'mn' ? 'Батламжийн дугаар оруулах (жишээ нь: MN-ACAD-2026-0091)' : 'Enter Certificate ID (e.g. MN-ACAD-2026-0091)'}
+                value={certSearch}
+                onChange={(e) => setCertSearch(e.target.value)}
+                className="saas-input pl-10 text-sm font-mono"
+              />
+            </div>
             <button
               type="submit"
-              className="btn-primary px-4 py-2 rounded-lg text-xs font-medium shrink-0"
+              className="btn-primary px-6 py-2.5 text-xs font-medium text-white shrink-0 flex items-center justify-center gap-2 rounded-lg"
             >
-              {language === 'mn' ? 'Хайх' : 'Search'}
+              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              <span>{language === 'mn' ? 'Үнэн зөвийг шалгах' : 'Verify Authenticity'}</span>
             </button>
-          </div>
-        </form>
+          </form>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <Link
-            href="/classes"
-            className="w-full sm:w-auto btn-primary inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-xs font-medium shadow-sm"
-          >
-            <span>{language === 'mn' ? 'Бүх хичээлүүдийг үзэх' : 'Explore All Sprints'}</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-
-          <Link
-            href="/classes/create"
-            className="w-full sm:w-auto btn-secondary inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-xs font-medium"
-          >
-            <GraduationCap className="h-4 w-4 text-zinc-600" />
-            <span>{language === 'mn' ? 'Ментороор хичээл нээх' : 'Host a Sprint as Mentor'}</span>
-          </Link>
-        </div>
-
-      </section>
-
-      {/* Trust & Stats Bar */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          <div>
-            <p className="text-2xl sm:text-3xl font-bold text-zinc-900">28</p>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              {language === 'mn' ? 'Идэвхтэй спринт ангиуд' : 'Active Sprint Classes'}
-            </p>
-          </div>
-          <div>
-            <p className="text-2xl sm:text-3xl font-bold text-zinc-900">94</p>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              {language === 'mn' ? 'Суралцсан сурагчид' : 'Students Guided'}
-            </p>
-          </div>
-          <div>
-            <p className="text-2xl sm:text-3xl font-bold text-zinc-900">16</p>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              {language === 'mn' ? 'Хамрагдсан 21 аймаг' : 'Aimags Reached'}
-            </p>
-          </div>
-          <div>
-            <p className="text-2xl sm:text-3xl font-bold text-zinc-900">1–10</p>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              {language === 'mn' ? 'Суудлын хязгаар (Бичил анги)' : 'Seats per Cohort'}
-            </p>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500 pt-1">
+            <span className="text-zinc-400">{language === 'mn' ? 'Туршиж үзэх:' : 'Sample verified ID:'}</span>
+            <Link
+              href="/verify/MN-ACAD-2026-0091"
+              className="font-mono text-zinc-700 hover:text-blue-600 underline"
+            >
+              MN-ACAD-2026-0091
+            </Link>
+            <span className="text-zinc-300">•</span>
+            <span className="text-emerald-700 flex items-center gap-1 font-medium">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+              {language === 'mn' ? 'Криптограф хээгээр хамгаалагдсан' : 'Cryptographically Secured'}
+            </span>
           </div>
         </div>
       </section>
 
-      {/* Featured Sprints */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-zinc-900">
-              {language === 'mn' ? 'Нээлттэй спринт хичээлүүд' : 'Open Sprint Classes'}
-            </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              {language === 'mn' ? 'Удахгүй эхлэх, сул суудалтай ангиуд' : 'Upcoming cohorts with open seats'}
-            </p>
-          </div>
-
-          <Link
-            href="/classes"
-            className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
-          >
-            <span>{language === 'mn' ? 'Бүгдийг үзэх' : 'View all'}</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        {/* Classes Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {featuredClasses.map((cls) => {
-            const enrollCount = (cls.class_enrollments || []).length;
-            const seatsLeft = cls.max_seats - enrollCount;
-
-            return (
-              <div
-                key={cls.id}
-                className="saas-card p-5 flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
-                      {cls.subject}
-                    </span>
-                    <span className="text-zinc-500 text-[11px]">
-                      {cls.curriculum}
-                    </span>
-                  </div>
-
-                  <h3 className="text-sm font-bold text-zinc-900 leading-snug line-clamp-2">
-                    {cls.title}
-                  </h3>
-
-                  <p className="text-xs text-zinc-600 line-clamp-2 leading-relaxed">
-                    {cls.description}
-                  </p>
-
-                  <div className="pt-3 border-t border-zinc-100 space-y-1 text-xs text-zinc-600">
-                    <div className="flex items-center justify-between">
-                      <span>Mentor: <strong className="text-zinc-900">{cls.mentor_name}</strong></span>
-                      <span className="text-zinc-500 text-[11px]">{cls.mentor_school}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>{cls.duration_weeks} {language === 'mn' ? 'долоо хоног' : 'weeks'}</span>
-                      <span className="font-semibold text-zinc-900">
-                        {!cls.price_mnt || cls.price_mnt === 0 ? (language === 'mn' ? 'Үнэгүй (0 ₮)' : 'Free') : `${cls.price_mnt.toLocaleString()} ₮`}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
-                  <span className="text-zinc-500">
-                    {enrollCount} / {cls.max_seats} {language === 'mn' ? 'суудал дүүрсэн' : 'seats filled'}
-                  </span>
-
-                  <Link
-                    href={`/class/${cls.id}`}
-                    className="btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium"
-                  >
-                    {language === 'mn' ? 'Дэлгэрэнгүй' : 'View Class'}
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* How It Works (3 Steps) */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-zinc-900">
-            {language === 'mn' ? 'Мэдлэгийн хүрд хэрхэн ажилладаг вэ?' : 'How Mentor.mn Works'}
+      {/* 3. HOW IT WORKS: The 3 Core Pillars */}
+      <section className="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-12">
+        <div className="text-center space-y-3">
+          <span className="badge-accent text-xs">
+            {language === 'mn' ? 'Платформын ажиллах зарчим' : 'How Mentor.mn Works'}
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">
+            {language === 'mn' ? 'Үе тэнгийн боловсролын 3 үндсэн тулгуур' : 'Three Pillars of Peer Academic Leadership'}
           </h2>
-          <p className="text-xs sm:text-sm text-zinc-600 max-w-lg mx-auto">
+          <p className="text-sm text-zinc-500 max-w-xl mx-auto">
             {language === 'mn'
-              ? 'Сурагчид бие биенээ хөгжүүлж, бодит бүтээл хийх тогтолцоо'
-              : 'A transparent peer-driven system focused on tangible mastery'}
+              ? 'Уламжлалт том танхимын лекцийг халж, 1-10 сурагчтай эрчимтэй спринтээр үр дүнд хүргэнэ.'
+              : 'Moving beyond passive video lectures to intensive, cohort-based mastery with personal mentor feedback.'}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="saas-card p-6 space-y-3">
-            <div className="h-8 w-8 rounded-lg bg-zinc-100 flex items-center justify-center font-bold text-xs text-zinc-800">
-              1
+          
+          {/* Pillar 1 */}
+          <div className="saas-card p-6 space-y-4">
+            <div className="h-10 w-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+              <Users className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-zinc-900">
-              {language === 'mn' ? 'Спринт хичээлээ сонгох' : '1. Claim Your Seat'}
+            <h3 className="text-base font-bold text-zinc-900">
+              {language === 'mn' ? '1. Бичил ангиуд (1–10 суудал)' : '1. Small Cohorts (1–10 Seats)'}
             </h3>
             <p className="text-xs text-zinc-600 leading-relaxed">
               {language === 'mn'
-                ? 'Өөрийн сонирхсон сэдвээр (Олимпиад, SAT, Кодчилол) 1–10 суудлын бичил ангиас сонгон шууд суудал захиална.'
-                : 'Browse 1–3 week micro-cohorts (1 to 10 seats) in Math, SAT, Coding, and Physics led by top peer mentors.'}
+                ? 'Нэг ангид хамгийн ихдээ 10 сурагч суралцана. Ментор сурагч бүрийн гаргасан алдааг тухай бүрт нь тайлбарлаж, ганцаарчилсан санал шүүмж өгнө.'
+                : 'Every cohort is strictly capped at 10 students. No crowded Zoom calls. Mentors provide individualized line-by-line feedback on your work.'}
             </p>
           </div>
 
-          <div className="saas-card p-6 space-y-3">
-            <div className="h-8 w-8 rounded-lg bg-zinc-100 flex items-center justify-center font-bold text-xs text-zinc-800">
-              2
+          {/* Pillar 2 */}
+          <div className="saas-card p-6 space-y-4">
+            <div className="h-10 w-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+              <Target className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-zinc-900">
-              {language === 'mn' ? 'Бодит бүтээл хийж эзэмших' : '2. Build Tangible Artifacts'}
+            <h3 className="text-base font-bold text-zinc-900">
+              {language === 'mn' ? '2. Бодит бүтээл (Weekly Proof)' : '2. Verifiable Deliverables'}
             </h3>
             <p className="text-xs text-zinc-600 leading-relaxed">
               {language === 'mn'
-                ? 'Лекц сонсохоос илүүтэй долоо хоног бүр бодит бодлого бодох, код бичих эсвэл судалгаа хийж ментороороо батлуулна.'
-                : 'No passive lectures. Submit working codebases, solved olympiad proofs, or project writeups for 1-on-1 mentor verification.'}
+                ? 'Долоо хоног бүр шалгуулах бодлогын бодолт, төсөл, судалгааны бүтээлүүдээ танхимдаа илгээнэ. Хоосон сертификат бус, бодит чадварыг үнэлнэ.'
+                : 'Students submit solved problem sets, annotated research reviews, and code artifacts. Certificates are earned through proof of mastery, not just attendance.'}
             </p>
           </div>
 
-          <div className="saas-card p-6 space-y-3">
-            <div className="h-8 w-8 rounded-lg bg-zinc-100 flex items-center justify-center font-bold text-xs text-zinc-800">
-              3
+          {/* Pillar 3 */}
+          <div className="saas-card p-6 space-y-4">
+            <div className="h-10 w-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+              <Award className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-zinc-900">
-              {language === 'mn' ? 'Дүү нартаа заах & Зэрэг ахих' : '3. Pay It Forward & Mentor'}
+            <h3 className="text-base font-bold text-zinc-900">
+              {language === 'mn' ? '3. Албан ёсны батламж' : '3. National Credentials'}
             </h3>
             <p className="text-xs text-zinc-600 leading-relaxed">
               {language === 'mn'
-                ? 'Хичээлээ амжилттай дүүргэсэн сурагч өөрөө дараагийн дүү нартаа зааж өгөх эрхтэй болж албан ёсны зэрэг ахина.'
-                : 'Graduated students unlock mentor credentials, hosting their own micro-cohorts and guiding younger peers across Mongolia.'}
+                ? 'Амжилттай дүүргэсэн спринт бүр нь олон улсын их сургуулиудад өргөдөл гаргахад хүчинтэй, SHA-256 криптограф хээтэй албан ёсны батламж болно.'
+                : 'Completed sprints grant tamper-proof academic credentials verifiable by admissions officers worldwide, demonstrating peer leadership and advanced subject mastery.'}
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 4. WHO CAN JOIN SECTION */}
+      <section className="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+        <div className="saas-card p-8 sm:p-12 border-zinc-200 space-y-8">
+          <div className="max-w-2xl space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+              {language === 'mn' ? 'Платформын оролцогчид' : 'Platform Roles'}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">
+              {language === 'mn' ? 'Та суралцагч эсвэл ментор уу?' : 'Are you a Learner or a Mentor?'}
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-600">
+              {language === 'mn'
+                ? 'Нэвтэрсний дараа сурагчийн болон менторын эрхээр сургалтад хамрагдах эсвэл шинэ анги нээх боломжтой.'
+                : 'Once you sign in, your dashboard gives you access to both learning in cohorts and hosting sprints as a verified mentor.'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            
+            {/* For Students */}
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                  {language === 'mn' ? 'Сурагчдын хувьд' : 'For Scholars & Students'}
+                </span>
+                <span className="badge-accent text-xs">Learner</span>
+              </div>
+              <h3 className="text-lg font-bold text-zinc-900">
+                {language === 'mn' ? 'Шилдгүүдээс суралцах' : 'Learn Directly from Proven Peers'}
+              </h3>
+              <ul className="space-y-2 text-xs text-zinc-600">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>{language === 'mn' ? 'Олимпиад, SAT, Cambridge шалгалтын бодит туршлага' : 'Direct prep for Olympiads, SAT, and Cambridge AS/A-Levels'}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>{language === 'mn' ? '1-10 сурагчтай ангид асуулт асуух, чөлөөтэй ярилцах' : 'Interactive small-group cohorts with open Q&A'}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>{language === 'mn' ? 'Бүтээл бүрээ баталгаажуулж дижитал портфолио үүсгэх' : 'Build a verified deliverable portfolio for college applications'}</span>
+                </li>
+              </ul>
+              <div className="pt-2">
+                <Link
+                  href="/login"
+                  className="btn-secondary w-full py-2 text-xs font-medium text-zinc-900 text-center flex items-center justify-center gap-1.5"
+                >
+                  <span>{language === 'mn' ? 'Сурагчаар нэвтрэх' : 'Sign in as Student'}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* For Mentors */}
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
+                  {language === 'mn' ? 'Менторуудын хувьд' : 'For Proven Scholars & Medalists'}
+                </span>
+                <span className="badge-accent text-xs">Mentor</span>
+              </div>
+              <h3 className="text-lg font-bold text-zinc-900">
+                {language === 'mn' ? 'Мэдлэгээ хуваалцах & Зэрэг ахих' : 'Teach Younger Peers & Earn Standing'}
+              </h3>
+              <ul className="space-y-2 text-xs text-zinc-600">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>{language === 'mn' ? 'Өөрийн хуваарьт тохируулан 1-4 долоо хоногийн спринт нээх' : 'Host 1-4 week flexible cohorts on your own schedule'}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>{language === 'mn' ? 'Ментор XP цуглуулан National Laureate зэрэг хүртэх' : 'Earn Mentor XP and advance to National Laureate tier'}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>{language === 'mn' ? 'Их сургуульд хүчинтэй албан ёсны манлайллын батламж' : 'Receive official peer pedagogical leadership certificates'}</span>
+                </li>
+              </ul>
+              <div className="pt-2">
+                <Link
+                  href="/login?mode=signup"
+                  className="btn-primary w-full py-2 text-xs font-medium text-white text-center flex items-center justify-center gap-1.5"
+                >
+                  <span>{language === 'mn' ? 'Ментороор бүртгүүлэх' : 'Sign in as Mentor'}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* 5. FAQ SECTION */}
+      <section className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold tracking-tight text-zinc-900">
+            {language === 'mn' ? 'Түгээмэл асуултууд' : 'Frequently Asked Questions'}
+          </h2>
+          <p className="text-xs text-zinc-500">
+            {language === 'mn' ? 'Платформын тухай дэлгэрэнгүй мэдээлэл' : 'Everything you need to know about the platform'}
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="saas-card p-5 space-y-1.5">
+            <h3 className="text-sm font-semibold text-zinc-900">
+              {language === 'mn' ? 'Хичээлүүд хаана явагддаг вэ?' : 'Where do the classes take place?'}
+            </h3>
+            <p className="text-xs text-zinc-600 leading-relaxed">
+              {language === 'mn'
+                ? 'Бүх хичээлүүд Google Meet эсвэл Zoom-ээр онлайнаар шууд явагддаг бөгөөд даалгавар, хэлэлцүүлэг нь тухайн ангийн Mentor.mn танхимд явагддаг.'
+                : 'All live sprint sessions take place online via Google Meet or Zoom, while weekly missions, discussions, and deliverable reviews happen inside your cohort space.'}
+            </p>
+          </div>
+
+          <div className="saas-card p-5 space-y-1.5">
+            <h3 className="text-sm font-semibold text-zinc-900">
+              {language === 'mn' ? 'Батламж үнэхээр их сургуулийн элсэлтэд хүчинтэй юу?' : 'Are certificates recognized by universities?'}
+            </h3>
+            <p className="text-xs text-zinc-600 leading-relaxed">
+              {language === 'mn'
+                ? 'Тийм. Mentor.mn-ийн батламж бүр нь SHA-256 криптограф хээтэй, шалгаж болохуйц цахим холбоостой байдаг бөгөөд Common App болон олон улсын их сургуулиудад академик манлайллын албан ёсны нотолгоо болдог.'
+                : 'Yes. Each certificate includes a unique ID and a tamper-proof SHA-256 cryptographic digest. Admissions committees can instantly verify your peer mentorship and project submissions online.'}
+            </p>
+          </div>
+
+          <div className="saas-card p-5 space-y-1.5">
+            <h3 className="text-sm font-semibold text-zinc-900">
+              {language === 'mn' ? 'Хэн ментор болох боломжтой вэ?' : 'Who can become a mentor?'}
+            </h3>
+            <p className="text-xs text-zinc-600 leading-relaxed">
+              {language === 'mn'
+                ? 'Улс, олон улсын олимпиадад амжилт гаргасан, SAT, AP шалгалтын өндөр оноотой, эсвэл дотоод гадаадын их сургуулийн шилдэг оюутнууд ментороор бүртгүүлэн анги нээх боломжтой.'
+                : 'Olympiad medalists, students with top SAT/AP scores, and university scholars who have demonstrated academic excellence can register and launch sprint cohorts.'}
             </p>
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <h2 className="text-xl font-bold text-zinc-900 text-center">
-          {language === 'mn' ? 'Сурагч, менторуудын сэтгэгдэл' : 'Trusted by Students & Mentors'}
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="saas-card p-6 space-y-3">
-            <p className="text-xs sm:text-sm text-zinc-700 italic leading-relaxed">
-              &ldquo;Багшийн танхимын лекцээс илүүтэй саяхан олимпиадад амжилттай оролцсон ах эгч нар маань яг хаана гацдагийг маш сайн ойлгож, шууд бодлогын гол санааг хэлж өгсөн нь үнэхээр тус болсон.&rdquo;
-            </p>
-            <div className="flex items-center gap-3 pt-2">
-              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-700">
-                М
-              </div>
-              <div>
-                <p className="text-xs font-bold text-zinc-900">Мөнхжин А.</p>
-                <p className="text-[11px] text-zinc-500">Ховд 1-р сургууль, 11-р анги</p>
-              </div>
-            </div>
+      {/* 6. BOTTOM CALL TO ACTION */}
+      <section className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center">
+        <div className="saas-card p-10 sm:p-14 space-y-6 bg-zinc-900 text-white shadow-xl rounded-3xl">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-white shadow-inner">
+            <GraduationCap className="h-7 w-7 text-amber-300" />
           </div>
-
-          <div className="saas-card p-6 space-y-3">
-            <p className="text-xs sm:text-sm text-zinc-700 italic leading-relaxed">
-              &ldquo;Өөрөө сурсан зүйлээ 3 дүү нартаа зааж өгөх үед өөрийнхөө ойлголт улам батжиж, өөртөө итгэлтэй болдог юм байна. Албан ёсны сертификат нь гадаадын их сургуулийн анкет бөглөхөд маш том давуу тал болсон.&rdquo;
+          <div className="space-y-2 max-w-xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              {language === 'mn' ? 'Үндэсний академик сүлжээнд нэгдээрэй' : 'Join the National Mentorship Network'}
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+              {language === 'mn'
+                ? 'Өөрийн хаягаар нэвтэрч, идэвхтэй бичил ангиуд, менторууд болон хуваарьт хичээлүүдэд нэвтрээрэй.'
+                : 'Sign in to access small-group sprints, active cohorts, mentor applications, and verified credentials.'}
             </p>
-            <div className="flex items-center gap-3 pt-2">
-              <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
-                Т
-              </div>
-              <div>
-                <p className="text-xs font-bold text-zinc-900">Тэмүүлэн Б.</p>
-                <p className="text-[11px] text-zinc-500">1-р сургууль, Ахлах Ментор</p>
-              </div>
-            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Link
+              href="/login"
+              className="w-full sm:w-auto px-6 py-3 text-xs font-semibold text-zinc-900 bg-white rounded-xl hover:bg-zinc-100 transition-colors shadow-sm flex items-center justify-center gap-2"
+            >
+              <span>{language === 'mn' ? 'Нэвтрэх / Бүртгүүлэх' : 'Sign In / Register'}</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+            <Link
+              href="/verify"
+              className="w-full sm:w-auto px-6 py-3 text-xs font-semibold text-white border border-white/20 rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+              <span>{language === 'mn' ? 'Батламж шалгах' : 'Verify Certificate'}</span>
+            </Link>
           </div>
         </div>
       </section>

@@ -29,7 +29,9 @@ export interface User {
   specializations: string[]; // Subjects they can mentor (e.g. ["Cambridge Math", "Python", "Physics Olympiad"])
   learningGoals: string[]; // Subjects they want to learn (e.g. ["Competitive Programming", "Advanced Calculus"])
   
-  // Mentor progression metrics
+  // Mentor verification & progression metrics
+  mentorStatus: 'none' | 'pending' | 'verified';
+  achievements: string[];
   mentorTier: FormalTier;
   mentorXp: number;
   totalStudentsMentored: number;
@@ -46,6 +48,15 @@ export interface EnrolledStudent {
   location: string;
   grade: string;
   enrolledAt: string;
+  status: 'confirmed' | 'pending' | 'rejected';
+  applicationNote?: string;
+}
+
+export interface Mission {
+  weekNumber: number;
+  title: string;
+  description: string;
+  deliverablePrompt: string;
 }
 
 export interface SprintClass {
@@ -59,6 +70,9 @@ export interface SprintClass {
   subject: string;
   curriculum: string; // "Mongolian 12-Year", "Cambridge AS/A-Level", "IB Diploma", "National Olympiad"
   maxSeats: number; // 1 to 10 seats
+  priceMnt: number; // 0 for Free
+  enrollmentMode: 'instant' | 'application';
+  missions: Mission[];
   enrolledStudents: EnrolledStudent[];
   startDate: string; // ISO date string
   endDate: string; // ISO date string
@@ -80,6 +94,17 @@ export interface Deliverable {
   status: 'pending' | 'approved' | 'revision';
   submittedAt: string;
   approvedAt?: string;
+}
+
+export interface SprintDiscussion {
+  id: string;
+  classId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  isMentor: boolean;
+  content: string;
+  createdAt: string;
 }
 
 export interface Certificate {

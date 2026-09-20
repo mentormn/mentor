@@ -1,10 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useMentorStore } from '@/lib/store';
+import { usePathname, useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
-import { TIER_CONFIGS } from '@/lib/engine/tierProgression';
+import { supabase } from '@/lib/supabase/client';
 import { 
   GraduationCap, 
   BookOpen, 
@@ -12,35 +12,89 @@ import {
   ShieldCheck, 
   BarChart3, 
   Globe,
-  Sparkles 
+  Sparkles,
+  UserCheck,
+  LogOut,
+  Menu,
+  X
 } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { user } = useMentorStore();
+  const router = useRouter();
   const { language, toggleLanguage, t } = useLanguage();
-  const tierConfig = TIER_CONFIGS[user.mentorTier];
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // Check active Supabase auth state
+    async function loadUser() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setCurrentUser(session.user);
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        if (data) setProfile(data);
+      } else {
+        setCurrentUser(null);
+        setProfile(null);
+      }
+    }
+
+    loadUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setCurrentUser(session.user);
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => {
+            if (data) setProfile(data);
+          });
+      } else {
+        setCurrentUser(null);
+        setProfile(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setCurrentUser(null);
+    setProfile(null);
+    router.push('/');
+    router.refresh();
+  };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-[#09090b]/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
-        {/* Brand & National Badge */}
+        {/* Brand & Badge */}
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-900 text-white shadow-md group-hover:bg-blue-800 transition-colors">
-              <GraduationCap className="h-6 w-6 text-amber-400" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600/10 border border-blue-500/20 text-blue-400 group-hover:border-blue-500/40 group-hover:bg-blue-600/20 transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+              <GraduationCap className="h-5 w-5 text-blue-400" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
-                  Mentor<span className="text-blue-600">.mn</span>
+                <span className="text-base font-bold tracking-tight text-white">
+                  Mentor<span className="text-blue-500">.mn</span>
                 </span>
-                <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                <span className="rounded-full bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.2 text-[9px] font-semibold text-blue-400 uppercase tracking-wide">
                   {t('nationalTag')}
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+              <p className="text-[10px] text-zinc-400 hidden sm:block">
                 {t('brandTitle')}
               </p>
             </div>
@@ -51,110 +105,164 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-1">
           <Link
             href="/classes"
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
               pathname === '/classes'
-                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400'
-                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                ? 'bg-white/[0.08] text-white border border-white/[0.1]'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <BookOpen className="h-4 w-4" />
+            <BookOpen className="h-3.5 w-3.5" />
             {t('navClasses')}
           </Link>
 
           <Link
             href="/ministry/audit"
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
               pathname === '/ministry/audit'
-                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400'
-                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                ? 'bg-white/[0.08] text-white border border-white/[0.1]'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <BarChart3 className="h-4 w-4 text-emerald-600" />
+            <BarChart3 className="h-3.5 w-3.5 text-emerald-400" />
             {t('navMinistry')}
           </Link>
 
           <Link
             href="/verify/MN-EDU-2026-7A4F"
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
               pathname.startsWith('/verify')
-                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400'
-                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                ? 'bg-white/[0.08] text-white border border-white/[0.1]'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            <ShieldCheck className="h-4 w-4 text-blue-600" />
+            <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
             {t('navVerify')}
           </Link>
         </nav>
 
-        {/* Right CTA & Dual-Identity Profile Pill */}
-        <div className="flex items-center gap-3">
-          
-          {/* Language Switcher Button */}
+        {/* Right Action Items */}
+        <div className="flex items-center gap-2.5">
+          {/* Language Switcher */}
           <button
             onClick={toggleLanguage}
-            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 transition-colors"
+            className="flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-zinc-900/60 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:text-white hover:border-white/[0.15] transition-all"
             title="Switch Language / Хэл солих"
           >
-            <Globe className="h-3.5 w-3.5 text-blue-600" />
+            <Globe className="h-3.5 w-3.5 text-blue-400" />
             <span>{language === 'mn' ? 'EN' : 'МН'}</span>
           </button>
 
+          {/* Open a Class CTA */}
           <Link
             href="/classes/create"
-            className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-all active:scale-95"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-1.5 text-xs font-medium text-white shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all active:scale-95"
           >
-            <PlusCircle className="h-4 w-4" />
+            <PlusCircle className="h-3.5 w-3.5" />
             {t('navOpenClass')}
           </Link>
 
-          <Link
-            href="/login"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 shadow-sm"
-          >
-            {language === 'mn' ? 'Нэвтрэх' : 'Sign In'}
-          </Link>
-
-          {/* Unified Profile Link */}
-          <Link
-            href="/profile"
-            className={`flex items-center gap-2.5 rounded-full border p-1 pr-3 transition-all hover:shadow-md ${
-              pathname === '/profile'
-                ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/30'
-                : 'border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900'
-            }`}
-          >
-            <div className="relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={user.avatar}
-                alt={user.name}
-                className="h-8 w-8 rounded-full object-cover border border-white shadow-sm"
-              />
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white">
-                <span className="h-1.5 w-1.5 rounded-full bg-white" />
-              </span>
-            </div>
-
-            <div className="text-left">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1 max-w-[110px]">
-                  {user.name.split(' ')[0]}
+          {/* Auth State Button */}
+          {currentUser ? (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/profile"
+                className={`flex items-center gap-2 rounded-full border border-white/[0.08] bg-zinc-900/80 p-1 pr-2.5 hover:border-white/[0.16] transition-all ${
+                  pathname === '/profile' ? 'ring-1 ring-blue-500' : ''
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                  alt={profile?.name || 'User'}
+                  className="h-6 w-6 rounded-full object-cover border border-white/10"
+                />
+                <span className="text-xs font-medium text-zinc-200 line-clamp-1 max-w-[90px]">
+                  {profile?.name ? profile.name.split(' ')[0] : 'Profile'}
                 </span>
-                <span
-                  className={`inline-flex items-center gap-0.5 rounded px-1 py-0.2 text-[9px] font-extrabold uppercase border ${tierConfig.badgeClass}`}
-                >
-                  <Sparkles className="h-2.5 w-2.5" />
-                  {language === 'mn' ? tierConfig.titleMn.split(' ')[0] : tierConfig.titleEn.split(' ')[0]}
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                {user.mentorXp} XP • {t('navProfile')}
-              </p>
+                {profile?.mentor_status === 'verified' && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                )}
+              </Link>
+
+              <button
+                onClick={handleSignOut}
+                className="p-1.5 text-zinc-400 hover:text-zinc-200 rounded-lg hover:bg-white/[0.04] transition-colors"
+                title={t('navLogout')}
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
-          </Link>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login"
+                className="rounded-lg border border-white/[0.08] bg-zinc-900/60 px-3 py-1.5 text-xs font-medium text-zinc-200 hover:text-white hover:border-white/[0.16] transition-all"
+              >
+                {t('navLogin')}
+              </Link>
+            </div>
+          )}
+
+          {/* Mobile Menu Toggle */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-1.5 text-zinc-400 hover:text-white"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
-
       </div>
+
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-white/[0.08] bg-[#09090b] px-4 py-4 space-y-2">
+          <Link
+            href="/classes"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block py-2 text-sm text-zinc-300 hover:text-white"
+          >
+            {t('navClasses')}
+          </Link>
+          <Link
+            href="/classes/create"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block py-2 text-sm text-blue-400 hover:text-blue-300 font-medium"
+          >
+            + {t('navOpenClass')}
+          </Link>
+          <Link
+            href="/ministry/audit"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block py-2 text-sm text-zinc-300 hover:text-white"
+          >
+            {t('navMinistry')}
+          </Link>
+          <Link
+            href="/verify/MN-EDU-2026-7A4F"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block py-2 text-sm text-zinc-300 hover:text-white"
+          >
+            {t('navVerify')}
+          </Link>
+          {currentUser ? (
+            <Link
+              href="/profile"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm text-zinc-300 hover:text-white"
+            >
+              {t('navProfile')}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-sm text-zinc-300 hover:text-white"
+            >
+              {t('navLogin')}
+            </Link>
+          )}
+        </div>
+      )}
     </header>
   );
 }

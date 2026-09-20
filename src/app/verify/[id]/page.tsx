@@ -1,10 +1,10 @@
-import { INITIAL_CERTIFICATES } from '@/lib/mockData';
 import VerifyClient from './VerifyClient';
 
-export function generateStaticParams() {
-  return INITIAL_CERTIFICATES.map((cert) => ({ id: cert.id }));
-}
-
-export default function VerifyPage() {
-  return <VerifyClient />;
+export default async function VerifyPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <VerifyClient certId={id} />;
 }

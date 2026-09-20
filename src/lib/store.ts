@@ -47,6 +47,8 @@ export function useMentorStore() {
               location: profile.location || 'Ulaanbaatar',
               specializations: profile.specializations || [],
               learningGoals: profile.learning_goals || [],
+              mentorStatus: profile.mentor_status || 'none',
+              achievements: profile.achievements || [],
               mentorTier: profile.mentor_tier || 'JUNIOR_MENTOR',
               mentorXp: profile.mentor_xp || 0,
               totalStudentsMentored: profile.total_students || 0,
@@ -57,7 +59,7 @@ export function useMentorStore() {
         }
 
         // 2. Fetch classes from Supabase
-        const { data: dbClasses, error: classErr } = await supabase
+        const { data: dbClasses } = await supabase
           .from('sprint_classes')
           .select('*, class_enrollments(*, profiles(*))')
           .order('created_at', { ascending: false });
@@ -74,6 +76,9 @@ export function useMentorStore() {
             subject: c.subject,
             curriculum: c.curriculum,
             maxSeats: c.max_seats,
+            priceMnt: c.price_mnt || 0,
+            enrollmentMode: c.enrollment_mode || 'instant',
+            missions: c.missions || [],
             startDate: c.start_date,
             endDate: c.end_date,
             durationWeeks: c.duration_weeks,
@@ -88,6 +93,7 @@ export function useMentorStore() {
               location: e.profiles?.location || 'Mongolia',
               grade: e.profiles?.grade || 'High School',
               enrolledAt: e.enrolled_at,
+              status: e.status || 'confirmed',
             })),
           }));
           setClasses(mapped);
@@ -184,6 +190,7 @@ export function useMentorStore() {
         location: user.location,
         grade: user.grade,
         enrolledAt: new Date().toISOString(),
+        status: 'confirmed' as const,
       },
     ];
 
@@ -221,7 +228,7 @@ export function useMentorStore() {
     let generatedId = `class-${Date.now()}`;
 
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('sprint_classes')
         .insert({
           title: newClassData.title,
@@ -233,6 +240,9 @@ export function useMentorStore() {
           subject: newClassData.subject,
           curriculum: newClassData.curriculum,
           max_seats: newClassData.maxSeats,
+          price_mnt: newClassData.priceMnt || 0,
+          enrollment_mode: newClassData.enrollmentMode || 'instant',
+          missions: newClassData.missions || [],
           start_date: newClassData.startDate,
           end_date: newClassData.endDate,
           duration_weeks: newClassData.durationWeeks,

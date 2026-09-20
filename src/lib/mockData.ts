@@ -12,6 +12,12 @@ export const CURRENT_USER: User = {
   location: 'Ulaanbaatar - Sukhbaatar District',
   specializations: ['Python & Pygame', 'Cambridge AS Math', 'Intro to Algorithms'],
   learningGoals: ['National Physics Olympiad', 'Advanced Calculus'],
+  mentorStatus: 'verified',
+  achievements: [
+    'National Informatics Olympiad Silver Medal 2025',
+    'Cambridge AS Mathematics: A* (Score 96)',
+    'SAT: 1520 (Math 800)',
+  ],
   mentorTier: 'SENIOR_MENTOR',
   mentorXp: 220,
   totalStudentsMentored: 8,
@@ -31,6 +37,22 @@ export const INITIAL_CLASSES: SprintClass[] = [
     subject: 'Mathematics',
     curriculum: 'Cambridge AS/A-Level',
     maxSeats: 3,
+    priceMnt: 0,
+    enrollmentMode: 'instant',
+    missions: [
+      {
+        weekNumber: 1,
+        title: 'Chain Rule & Optimization Proofs',
+        description: 'Deep dive into differentiation definitions and rate-of-change challenges.',
+        deliverablePrompt: 'Submit solved PDF of 8 multi-part Cambridge Mechanics problems.',
+      },
+      {
+        weekNumber: 2,
+        title: 'Newtonian Kinematics & Applied Trajectories',
+        description: 'Apply calculus to projectile motion and energy conservation.',
+        deliverablePrompt: 'Submit annotated solutions to Cambridge 2024 past paper section B.',
+      },
+    ],
     enrolledStudents: [
       {
         id: 'std-1',
@@ -39,6 +61,7 @@ export const INITIAL_CLASSES: SprintClass[] = [
         location: 'Khovd Aimag',
         grade: '11th Grade',
         enrolledAt: '2026-09-18T10:00:00Z',
+        status: 'confirmed',
       },
       {
         id: 'std-2',
@@ -47,6 +70,7 @@ export const INITIAL_CLASSES: SprintClass[] = [
         location: 'Ulaanbaatar - Bayanzurkh',
         grade: '11th Grade',
         enrolledAt: '2026-09-19T14:30:00Z',
+        status: 'confirmed',
       },
     ],
     startDate: '2026-09-24',
@@ -68,6 +92,22 @@ export const INITIAL_CLASSES: SprintClass[] = [
     subject: 'Computer Science',
     curriculum: 'Practical Engineering',
     maxSeats: 4,
+    priceMnt: 35000,
+    enrollmentMode: 'instant',
+    missions: [
+      {
+        weekNumber: 1,
+        title: 'Pygame Setup & Sprite Animation',
+        description: 'Initialize graphics window, handle input events, and animate sprites with delta time.',
+        deliverablePrompt: 'Submit working Python script with controllable player character.',
+      },
+      {
+        weekNumber: 2,
+        title: 'Collision Physics & Score Architecture',
+        description: 'Build bounding box collisions, particle effects, and game over states.',
+        deliverablePrompt: 'Submit GitHub repository link of complete 2D arcade game.',
+      },
+    ],
     enrolledStudents: [
       {
         id: 'std-3',
@@ -76,6 +116,7 @@ export const INITIAL_CLASSES: SprintClass[] = [
         location: 'Darkhan-Uul Aimag',
         grade: '10th Grade',
         enrolledAt: '2026-09-18T12:00:00Z',
+        status: 'confirmed',
       },
       {
         id: 'std-4',
@@ -84,6 +125,7 @@ export const INITIAL_CLASSES: SprintClass[] = [
         location: 'Ulaanbaatar - Chingeltei',
         grade: '9th Grade',
         enrolledAt: '2026-09-19T08:00:00Z',
+        status: 'confirmed',
       },
       {
         id: 'std-5',
@@ -92,6 +134,7 @@ export const INITIAL_CLASSES: SprintClass[] = [
         location: 'Dornod Aimag',
         grade: '10th Grade',
         enrolledAt: '2026-09-20T03:00:00Z',
+        status: 'confirmed',
       },
     ],
     startDate: '2026-09-26',
@@ -113,6 +156,28 @@ export const INITIAL_CLASSES: SprintClass[] = [
     subject: 'Physics',
     curriculum: 'National Olympiad',
     maxSeats: 2,
+    priceMnt: 0,
+    enrollmentMode: 'application',
+    missions: [
+      {
+        weekNumber: 1,
+        title: 'Kirchhoff Mesh Analysis in Complex Symmetry',
+        description: 'Solve multi-loop cube and infinite ladder resistor networks.',
+        deliverablePrompt: 'Submit written proofs for 5 olympiad ladder circuits.',
+      },
+      {
+        weekNumber: 2,
+        title: 'Wheatstone & Non-Linear Diodes',
+        description: 'Balance bridge circuits with temperature-dependent resistors.',
+        deliverablePrompt: 'Submit lab analysis or simulation screenshots.',
+      },
+      {
+        weekNumber: 3,
+        title: 'Olympiad Final Mock Exam',
+        description: 'Timed full-length physics circuit analysis exam.',
+        deliverablePrompt: 'Submit full exam solutions PDF.',
+      },
+    ],
     enrolledStudents: [
       {
         id: 'user-current',
@@ -121,6 +186,7 @@ export const INITIAL_CLASSES: SprintClass[] = [
         location: 'Ulaanbaatar - Sukhbaatar District',
         grade: '12th Grade',
         enrolledAt: '2026-09-19T16:00:00Z',
+        status: 'confirmed',
       },
     ],
     startDate: '2026-09-28',
@@ -142,6 +208,28 @@ export const INITIAL_CLASSES: SprintClass[] = [
     subject: 'Informatics',
     curriculum: 'National Olympiad',
     maxSeats: 8,
+    priceMnt: 50000,
+    enrollmentMode: 'application',
+    missions: [
+      {
+        weekNumber: 1,
+        title: 'Binary Lifting & Lowest Common Ancestor (LCA)',
+        description: 'Tree traversal algorithms and fast queries.',
+        deliverablePrompt: 'Submit Codeforces / Spoj problem submissions.',
+      },
+      {
+        weekNumber: 2,
+        title: 'Tree DP & Rerooting Techniques',
+        description: 'Dynamic programming on trees with subtrees and parents.',
+        deliverablePrompt: 'Submit AC code for 4 tree DP contest tasks.',
+      },
+      {
+        weekNumber: 3,
+        title: 'Heavy-Light Decomposition (HLD)',
+        description: 'Segment trees over tree paths.',
+        deliverablePrompt: 'Submit HLD template and solved national olympiad problem.',
+      },
+    ],
     enrolledStudents: [
       {
         id: 'std-6',
@@ -150,6 +238,7 @@ export const INITIAL_CLASSES: SprintClass[] = [
         location: 'Ulaanbaatar - Khan-Uul',
         grade: '11th Grade',
         enrolledAt: '2026-09-16T10:00:00Z',
+        status: 'confirmed',
       },
       {
         id: 'std-7',
@@ -158,6 +247,7 @@ export const INITIAL_CLASSES: SprintClass[] = [
         location: 'Bayan-Ölgii Aimag',
         grade: '12th Grade',
         enrolledAt: '2026-09-17T11:00:00Z',
+        status: 'confirmed',
       },
       {
         id: 'std-8',
@@ -166,6 +256,7 @@ export const INITIAL_CLASSES: SprintClass[] = [
         location: 'Ulaanbaatar',
         grade: '11th Grade',
         enrolledAt: '2026-09-18T09:00:00Z',
+        status: 'confirmed',
       },
       {
         id: 'std-9',
@@ -174,6 +265,7 @@ export const INITIAL_CLASSES: SprintClass[] = [
         location: 'Orkhon Aimag',
         grade: '10th Grade',
         enrolledAt: '2026-09-19T10:00:00Z',
+        status: 'confirmed',
       },
     ],
     startDate: '2026-10-01',
@@ -195,6 +287,16 @@ export const INITIAL_CLASSES: SprintClass[] = [
     subject: 'Chemistry',
     curriculum: 'Mongolian 12-Year',
     maxSeats: 4,
+    priceMnt: 0,
+    enrollmentMode: 'instant',
+    missions: [
+      {
+        weekNumber: 1,
+        title: 'Mole Calculations & Limiting Reactants',
+        description: 'Solve 15 core stoichiometry calculation problems with detailed units.',
+        deliverablePrompt: 'Submit photos of solved calculation sheets.',
+      },
+    ],
     enrolledStudents: [
       {
         id: 'std-10',
@@ -203,6 +305,7 @@ export const INITIAL_CLASSES: SprintClass[] = [
         location: 'Uvs Aimag',
         grade: '10th Grade',
         enrolledAt: '2026-09-19T13:00:00Z',
+        status: 'confirmed',
       },
     ],
     startDate: '2026-09-25',
@@ -285,7 +388,7 @@ export const NATIONAL_TELEMETRY = {
   activeClasses: 28,
   totalStudentsTaught: 94,
   aimagsReached: 16,
-  knowledgeMultiplier: '3.4x', // Rate at which mentees become mentors
+  knowledgeMultiplier: '3.4x',
   urbanToRuralTransferRate: '42%',
   provincialDistribution: [
     { province: 'Ulaanbaatar', count: 48, percentage: 51 },

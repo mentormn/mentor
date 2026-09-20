@@ -22,7 +22,8 @@ import {
   TrendingUp,
   FileCheck,
   Compass,
-  MessageSquare
+  MessageSquare,
+  Zap
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -188,6 +189,48 @@ export default function DashboardPage() {
           >
             <PlusCircle className="h-4 w-4" />
             {language === 'mn' ? 'Анги нээх' : 'Create Sprint'}
+          </Link>
+        </div>
+      </div>
+
+      {/* 10-Minute SOS Flash Mentoring Banner */}
+      <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/80 p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="flex items-start gap-4">
+          <div className="h-11 w-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <Zap className="h-6 w-6 text-amber-300 fill-amber-300" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-zinc-900">
+                {language === 'mn' ? '10-Минутын Шуурхай Тусламж (Flash Mentoring)' : '10-Minute SOS Flash Mentoring'}
+              </h2>
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-semibold text-blue-800">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
+                Live
+              </span>
+            </div>
+            <p className="text-xs text-zinc-600 max-w-2xl leading-relaxed">
+              {language === 'mn'
+                ? 'Хичээлээ хийж байгаад ойлгохгүй бодлого, сэдэв дээр гацсан уу? Шуурхай асуулт илгээж, шилдэг ментороос 10 минутын ганцаарчилсан Google Meet дуудлагаар заалт аваарай.'
+                : 'Stuck on a problem or concept? Post a quick SOS request and connect 1-on-1 with a proven mentor for a 10-minute instant sprint.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <Link
+            href="/sos?tab=ask"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 shadow-sm transition-colors"
+          >
+            <Zap className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />
+            <span>{language === 'mn' ? 'Шуурхай асуулт илгээх' : 'Ask 10-Min Help'}</span>
+          </Link>
+          <Link
+            href="/sos?tab=queue"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 shadow-sm transition-colors"
+          >
+            <Users className="h-3.5 w-3.5 text-zinc-500" />
+            <span>{language === 'mn' ? 'Хүсэлтийн сан (Queue)' : 'Browse SOS Queue'}</span>
           </Link>
         </div>
       </div>

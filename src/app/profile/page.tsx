@@ -21,7 +21,8 @@ import {
   Edit3,
   Video,
   ChevronRight,
-  FileCheck
+  FileCheck,
+  Phone
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -39,6 +40,9 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editSchool, setEditSchool] = useState('');
   const [editLocation, setEditLocation] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editGrade, setEditGrade] = useState('10-р анги');
+  const [editCurriculums, setEditCurriculums] = useState<string[]>(['National']);
   const [editBio, setEditBio] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -63,6 +67,9 @@ export default function ProfilePage() {
           setProfile(profData);
           setEditSchool(profData.school || '');
           setEditLocation(profData.location || '');
+          setEditPhone(profData.phone || '');
+          setEditGrade(profData.grade || '10-р анги');
+          setEditCurriculums(profData.curriculums || ['National']);
           setEditBio(profData.bio || '');
         }
 
@@ -144,6 +151,9 @@ export default function ProfilePage() {
         .update({
           school: editSchool,
           location: editLocation,
+          phone: editPhone,
+          grade: editGrade,
+          curriculums: editCurriculums,
           bio: editBio,
           updated_at: new Date().toISOString(),
         })
@@ -155,6 +165,9 @@ export default function ProfilePage() {
         ...profile,
         school: editSchool,
         location: editLocation,
+        phone: editPhone,
+        grade: editGrade,
+        curriculums: editCurriculums,
         bio: editBio,
       });
       setIsEditing(false);
@@ -199,6 +212,11 @@ export default function ProfilePage() {
                 <span className="badge-accent text-xs">
                   {profile?.role === 'mentor' ? 'Verified Mentor' : 'Student Scholar'}
                 </span>
+                {profile?.grade && (
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-700">
+                    {profile.grade}
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500">
@@ -206,6 +224,15 @@ export default function ProfilePage() {
                   <GraduationCap className="h-3.5 w-3.5 text-zinc-400" />
                   {profile?.school || 'Secondary School'}
                 </span>
+                {profile?.phone && (
+                  <>
+                    <span>•</span>
+                    <span className="flex items-center gap-1 text-zinc-700 font-mono">
+                      <Phone className="h-3 w-3 text-zinc-400" />
+                      {profile.phone}
+                    </span>
+                  </>
+                )}
                 <span>•</span>
                 <span className="flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5 text-zinc-400" />
@@ -238,6 +265,34 @@ export default function ProfilePage() {
                   onChange={(e) => setEditSchool(e.target.value)}
                   className="saas-input"
                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-zinc-700">
+                  {language === 'mn' ? 'Утасны дугаар' : 'Phone Number'}
+                </label>
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="9911-XXXX"
+                  className="saas-input font-mono"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-zinc-700">
+                  {language === 'mn' ? 'Анги' : 'Grade'}
+                </label>
+                <select
+                  value={editGrade}
+                  onChange={(e) => setEditGrade(e.target.value)}
+                  className="saas-input bg-white"
+                >
+                  {['6-р анги', '7-р анги', '8-р анги', '9-р анги', '10-р анги', '11-р анги', '12-р анги'].map((g) => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-1">

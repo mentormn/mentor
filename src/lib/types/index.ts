@@ -26,6 +26,8 @@ export interface User {
   grade: string; // e.g., "11th Grade", "12th Grade", "University 1st Year"
   school: string; // e.g., "School No. 1", "Orchlon", "Sant", "Khovd High School"
   location: string; // e.g., "Ulaanbaatar - Sukhbaatar District", "Khovd Aimag", "Darkhan-Uul"
+  phone?: string;
+  curriculums?: string[]; // e.g. ["National", "Cambridge"]
   specializations: string[]; // Subjects they can mentor (e.g. ["Cambridge Math", "Python", "Physics Olympiad"])
   learningGoals: string[]; // Subjects they want to learn (e.g. ["Competitive Programming", "Advanced Calculus"])
   
@@ -120,4 +122,25 @@ export interface Certificate {
   sha256Hash: string;
   issuedDate: string;
   verificationUrl: string;
+}
+
+export interface QuickHelpRequest {
+  id: string;
+  studentId?: string;
+  studentName: string;
+  phoneNumber: string;
+  school: string;
+  grade: string;
+  curriculum: 'National' | 'Cambridge' | 'Both';
+  subject: string;
+  title: string;
+  description: string;
+  attachmentUrl?: string;
+  mentorId?: string;
+  mentorName?: string;
+  meetingLink?: string;
+  status: 'open' | 'claimed' | 'resolved' | 'cancelled';
+  createdAt: string;
+  claimedAt?: string;
+  resolvedAt?: string;
 }

@@ -16,7 +16,8 @@ import {
   BookOpen,
   PlusCircle,
   User as UserIcon,
-  ChevronDown
+  ChevronDown,
+  Zap
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -137,6 +138,15 @@ export default function Navbar() {
               >
                 {language === 'mn' ? 'Хичээл нээх' : 'Host a Sprint'}
               </Link>
+              <Link
+                href="/sos"
+                className={`hover:text-blue-600 transition-colors flex items-center gap-1.5 ${
+                  pathname === '/sos' ? 'text-blue-600 font-semibold' : 'text-zinc-600'
+                }`}
+              >
+                <Zap className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                <span>{language === 'mn' ? '10-Мин SOS' : '10-Min SOS'}</span>
+              </Link>
             </nav>
           )}
         </div>
@@ -204,6 +214,15 @@ export default function Navbar() {
                     >
                       <LayoutDashboard className="h-4 w-4 text-zinc-400" />
                       <span>{language === 'mn' ? 'Хяналтын самбар' : 'Dashboard'}</span>
+                    </Link>
+
+                    <Link
+                      href="/sos"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="flex items-center gap-2 px-3.5 py-2 text-blue-700 bg-blue-50/50 hover:bg-blue-50 transition-colors"
+                    >
+                      <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
+                      <span className="font-semibold">{language === 'mn' ? '10-Мин SOS Тусламж' : '10-Min SOS Help'}</span>
                     </Link>
                   </div>
 
@@ -275,6 +294,14 @@ export default function Navbar() {
                 {language === 'mn' ? 'Хичээл нээх' : 'Host a Sprint'}
               </Link>
               <Link
+                href="/sos"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 py-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
+              >
+                <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
+                <span>{language === 'mn' ? '10-Мин SOS Тусламж' : '10-Min SOS Help'}</span>
+              </Link>
+              <Link
                 href="/profile"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block py-2 text-sm font-medium text-zinc-700 hover:text-zinc-900"
@@ -300,6 +327,14 @@ export default function Navbar() {
             </>
           ) : (
             <>
+              <Link
+                href="/sos"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 py-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
+              >
+                <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
+                <span>{language === 'mn' ? '10-Мин SOS Тусламж' : '10-Min SOS Help'}</span>
+              </Link>
               <Link
                 href="/verify"
                 onClick={() => setMobileMenuOpen(false)}

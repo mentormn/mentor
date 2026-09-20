@@ -13,13 +13,10 @@ import {
   Calendar, 
   Users, 
   PlusCircle, 
-  Sparkles, 
   CheckCircle2, 
   Clock,
   ArrowRight,
-  ShieldCheck,
   X,
-  ExternalLink,
   ChevronRight,
   Award
 } from 'lucide-react';
@@ -27,34 +24,33 @@ import {
 function ClassesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
 
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userEnrollments, setUserEnrollments] = useState<string[]>([]);
   
-  // Filter states initialized from URL or defaults
+  // Filter states
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedSubject, setSelectedSubject] = useState(searchParams.get('subject') || 'All');
-  const [selectedSize, setSelectedSize] = useState(searchParams.get('size') || 'All');
-  const [selectedPrice, setSelectedPrice] = useState(searchParams.get('price') || 'All');
+  const [selectedCurriculum, setSelectedCurriculum] = useState('All');
+  const [selectedSize, setSelectedSize] = useState('All');
   
   // Slide-over drawer state
   const [selectedClassForDrawer, setSelectedClassForDrawer] = useState<any | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
-  const subjects = ['All', 'Mathematics', 'Physics', 'Computer Science', 'Informatics', 'Chemistry'];
+  const curriculums = [
+    { key: 'All', labelEn: 'All Curriculums', labelMn: 'Бүх хөтөлбөр' },
+    { key: 'National', labelEn: 'National Curriculum', labelMn: 'Үндэсний хөтөлбөр' },
+    { key: 'Cambridge', labelEn: 'Cambridge Curriculum', labelMn: 'Кембриж хөтөлбөр' },
+  ];
+
   const sizes = [
     { key: 'All', labelEn: 'All Sizes', labelMn: 'Бүх хэмжээ' },
-    { key: '1-on-1', labelEn: '1-on-1 (1 Seat)', labelMn: 'Ганцаарчилсан (1)' },
-    { key: 'Micro-Pod', labelEn: 'Micro-Pod (2-3 Seats)', labelMn: 'Бичил анги (2-3)' },
-    { key: 'Cohort', labelEn: 'Cohort (4-10 Seats)', labelMn: 'Бүлэг анги (4-10)' },
-  ];
-  const priceOptions = [
-    { key: 'All', labelEn: 'All Prices', labelMn: 'Бүгд' },
-    { key: 'Free', labelEn: 'Free (0 ₮)', labelMn: 'Үнэгүй (0 ₮)' },
-    { key: 'Paid', labelEn: 'Funded / Paid', labelMn: 'Төлбөртэй' },
+    { key: '1-on-1', labelEn: '1-on-1 (1 Seat)', labelMn: 'Ганцаарчилсан' },
+    { key: 'Small', labelEn: 'Small (2–5 Seats)', labelMn: '2–5 суудал' },
+    { key: 'Cohort', labelEn: 'Cohort (6+ Seats)', labelMn: '6+ суудал' },
   ];
 
   const fetchClasses = async () => {
@@ -72,7 +68,6 @@ function ClassesContent() {
         }
       }
 
-      // Fetch classes with enrollments count
       const { data: classesData, error } = await supabase
         .from('sprint_classes')
         .select(`
@@ -139,25 +134,23 @@ function ClassesContent() {
       cls.mentor_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       cls.subject.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesSubject = selectedSubject === 'All' || cls.subject.toLowerCase() === selectedSubject.toLowerCase();
+    let matchesCurriculum = true;
+    if (selectedCurriculum === 'National') {
+      matchesCurriculum = cls.curriculum?.toLowerCase().includes('national');
+    } else if (selectedCurriculum === 'Cambridge') {
+      matchesCurriculum = cls.curriculum?.toLowerCase().includes('cambridge');
+    }
 
     let matchesSize = true;
     if (selectedSize === '1-on-1') {
       matchesSize = cls.max_seats === 1;
-    } else if (selectedSize === 'Micro-Pod') {
-      matchesSize = cls.max_seats >= 2 && cls.max_seats <= 3;
+    } else if (selectedSize === 'Small') {
+      matchesSize = cls.max_seats >= 2 && cls.max_seats <= 5;
     } else if (selectedSize === 'Cohort') {
-      matchesSize = cls.max_seats >= 4;
+      matchesSize = cls.max_seats >= 6;
     }
 
-    let matchesPrice = true;
-    if (selectedPrice === 'Free') {
-      matchesPrice = !cls.price_mnt || cls.price_mnt === 0;
-    } else if (selectedPrice === 'Paid') {
-      matchesPrice = cls.price_mnt > 0;
-    }
-
-    return matchesSearch && matchesSubject && matchesSize && matchesPrice;
+    return matchesSearch && matchesCurriculum && matchesSize;
   });
 
   return (
@@ -168,16 +161,19 @@ function ClassesContent() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">
-              {language === 'mn' ? 'Бичил сургалтууд (1-10 сурагч)' : 'Small-Group Sprints (1-10 Seats)'}
+              {language === 'mn' ? 'Сургалтуудын Жагсаалт' : 'Sprint Classes'}
             </h1>
             <span className="badge-accent text-xs">
               {filteredClasses.length} {language === 'mn' ? 'анги' : 'available'}
             </span>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+              Үнэгүй / Free
+            </span>
           </div>
           <p className="text-sm text-zinc-500 mt-1">
             {language === 'mn'
-              ? 'Олон улсын шилдэг оюутан, олимпиадын менторуудын хөтөлдөг 1-4 долоо хоногийн гүнзгийрүүлсэн сургалтууд.'
-              : 'Intensive 1-4 week cohorts led by verified top-tier scholars and medalists.'}
+              ? 'Үндэсний болон Кембрижийн хөтөлбөрийн дагуу олимпиад, хичээлийн гүнзгийрүүлсэн сургалтууд.'
+              : 'Peer-guided sprints under National and Cambridge curricula.'}
           </p>
         </div>
 
@@ -186,7 +182,7 @@ function ClassesContent() {
           className="btn-primary inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-white self-start md:self-auto"
         >
           <PlusCircle className="h-4 w-4" />
-          {language === 'mn' ? 'Шинэ анги зарлах' : 'Create a Sprint'}
+          {language === 'mn' ? 'Шинэ хичээл зарлах' : 'Host a Sprint'}
         </Link>
       </div>
 
@@ -211,40 +207,41 @@ function ClassesContent() {
           <Search className="absolute left-3.5 top-3 h-4 w-4 text-zinc-400" />
           <input
             type="text"
-            placeholder={language === 'mn' ? 'Сэдэв, хичээл, менторын нэрээр хайх...' : 'Search by subject, topic, or mentor name...'}
+            placeholder={language === 'mn' ? 'Хичээл, сэдэв, менторын нэрээр хайх...' : 'Search by subject, topic, or mentor name...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="saas-input pl-10"
           />
         </div>
 
-        {/* Subject Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar">
-          <span className="text-xs font-medium text-zinc-500 shrink-0 mr-1 flex items-center gap-1">
-            <Filter className="h-3.5 w-3.5" />
-            {language === 'mn' ? 'Хичээл:' : 'Subject:'}
-          </span>
-          {subjects.map((sub) => (
-            <button
-              key={sub}
-              onClick={() => setSelectedSubject(sub)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-                selectedSubject === sub
-                  ? 'bg-zinc-900 text-white shadow-sm'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-zinc-900'
-              }`}
-            >
-              {sub}
-            </button>
-          ))}
-        </div>
-
-        {/* Secondary Filters: Size & Price */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-zinc-100">
-          {/* Cohort Size */}
+        {/* Curriculum & Size Filters */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
+          {/* Curriculum Filter Pills */}
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-zinc-500">
-              {language === 'mn' ? 'Хэмжээ:' : 'Format:'}
+              {language === 'mn' ? 'Хөтөлбөр:' : 'Curriculum:'}
+            </span>
+            <div className="inline-flex rounded-lg border border-zinc-200 p-0.5 bg-zinc-50">
+              {curriculums.map((c) => (
+                <button
+                  key={c.key}
+                  onClick={() => setSelectedCurriculum(c.key)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                    selectedCurriculum === c.key
+                      ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/60 font-semibold'
+                      : 'text-zinc-600 hover:text-zinc-900'
+                  }`}
+                >
+                  {language === 'mn' ? c.labelMn : c.labelEn}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Size Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-zinc-500">
+              {language === 'mn' ? 'Суудал:' : 'Seats:'}
             </span>
             <div className="inline-flex rounded-lg border border-zinc-200 p-0.5 bg-zinc-50">
               {sizes.map((s) => (
@@ -253,33 +250,11 @@ function ClassesContent() {
                   onClick={() => setSelectedSize(s.key)}
                   className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors ${
                     selectedSize === s.key
-                      ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/60'
+                      ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/60 font-semibold'
                       : 'text-zinc-600 hover:text-zinc-900'
                   }`}
                 >
                   {language === 'mn' ? s.labelMn : s.labelEn}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Price Filter */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-zinc-500">
-              {language === 'mn' ? 'Төлбөр:' : 'Price:'}
-            </span>
-            <div className="inline-flex rounded-lg border border-zinc-200 p-0.5 bg-zinc-50">
-              {priceOptions.map((p) => (
-                <button
-                  key={p.key}
-                  onClick={() => setSelectedPrice(p.key)}
-                  className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors ${
-                    selectedPrice === p.key
-                      ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/60'
-                      : 'text-zinc-600 hover:text-zinc-900'
-                  }`}
-                >
-                  {language === 'mn' ? p.labelMn : p.labelEn}
                 </button>
               ))}
             </div>
@@ -302,20 +277,19 @@ function ClassesContent() {
           </div>
           <div>
             <h3 className="text-base font-semibold text-zinc-900">
-              {language === 'mn' ? 'Таны хайсан шалгуурт тохирох анги олдсонгүй' : 'No sprints match your filters'}
+              {language === 'mn' ? 'Шалгуурт тохирох хичээл олдсонгүй' : 'No sprints match your filters'}
             </h3>
             <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
               {language === 'mn'
-                ? 'Хайлтын үгээ өөрчлөх эсвэл шүүлтүүрээ арилгаад дахин оролдоно уу.'
-                : 'Try adjusting your search keywords or clearing some filters.'}
+                ? 'Хайлтын үгээ өөрчлөх эсвэл шинэ анги зарлаарай.'
+                : 'Try adjusting your search keywords or host a new sprint.'}
             </p>
           </div>
           <button
             onClick={() => {
               setSearchQuery('');
-              setSelectedSubject('All');
+              setSelectedCurriculum('All');
               setSelectedSize('All');
-              setSelectedPrice('All');
             }}
             className="btn-secondary px-4 py-2 text-xs font-medium text-zinc-800"
           >
@@ -339,11 +313,11 @@ function ClassesContent() {
                   
                   {/* Top Badges */}
                   <div className="flex items-center justify-between gap-2">
-                    <span className="badge-accent text-xs">
+                    <span className="badge-accent text-xs font-semibold">
                       {cls.subject}
                     </span>
                     <span className="text-[11px] font-semibold text-zinc-600 bg-zinc-100 px-2.5 py-0.5 rounded-md">
-                      {cls.curriculum || 'Standard'}
+                      {cls.curriculum || 'National Curriculum'}
                     </span>
                   </div>
 
@@ -362,7 +336,7 @@ function ClassesContent() {
 
                   {/* Mentor Profile info */}
                   <div className="flex items-center gap-3 pt-2 border-t border-zinc-100">
-                    <div className="h-9 w-9 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center font-semibold text-xs text-zinc-700">
+                    <div className="h-9 w-9 rounded-full bg-zinc-900 text-white flex items-center justify-center font-bold text-xs">
                       {cls.mentor_name.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -376,15 +350,15 @@ function ClassesContent() {
                     </div>
                   </div>
 
-                  {/* Logistics: Schedule & Duration */}
+                  {/* Logistics: Schedule & Duration (No price) */}
                   <div className="rounded-lg bg-zinc-50 p-3 space-y-1.5 text-xs text-zinc-600">
                     <div className="flex items-center justify-between">
                       <span className="text-zinc-500 flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5 text-zinc-400" />
-                        {cls.duration_weeks} {language === 'mn' ? 'долоо хоног' : 'weeks sprint'}
+                        {cls.duration_weeks} {language === 'mn' ? 'долоо хоног' : 'weeks'}
                       </span>
-                      <span className="font-semibold text-zinc-900">
-                        {cls.price_mnt ? `${cls.price_mnt.toLocaleString()} ₮` : (language === 'mn' ? 'Үнэгүй' : 'Free')}
+                      <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                        Үнэгүй / Free
                       </span>
                     </div>
                     <div className="text-[11px] text-zinc-500 truncate">
@@ -422,7 +396,7 @@ function ClassesContent() {
                     onClick={() => setSelectedClassForDrawer(cls)}
                     className="btn-secondary flex-1 py-2 text-xs font-medium text-zinc-800 text-center"
                   >
-                    {language === 'mn' ? 'Хөтөлбөр харах' : 'View Syllabus'}
+                    {language === 'mn' ? 'Дэлгэрэнгүй' : 'Details'}
                   </button>
 
                   {isEnrolled ? (
@@ -467,7 +441,6 @@ function ClassesContent() {
       {/* Slide-over Detail Drawer */}
       {selectedClassForDrawer && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
           <div 
             onClick={() => setSelectedClassForDrawer(null)}
             className="absolute inset-0 bg-zinc-900/40 backdrop-blur-sm transition-opacity" 
@@ -503,7 +476,7 @@ function ClassesContent() {
                 {/* Mentor Bio */}
                 <div className="rounded-xl border border-zinc-200 p-4 space-y-2 bg-zinc-50/50">
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
-                    {language === 'mn' ? 'Хөтлөх Ментор' : 'Sprint Mentor'}
+                    {language === 'mn' ? 'Хөтлөх Ментор' : 'Mentor'}
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-zinc-900 text-white flex items-center justify-center font-bold text-sm">
@@ -531,10 +504,10 @@ function ClassesContent() {
                   </p>
                 </div>
 
-                {/* Schedule & Format */}
+                {/* Schedule & Logistics */}
                 <div className="space-y-2">
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-900">
-                    {language === 'mn' ? 'Хуваарь & Төлбөр' : 'Schedule & Logistics'}
+                    {language === 'mn' ? 'Хуваарь' : 'Schedule'}
                   </h4>
                   <div className="rounded-xl border border-zinc-100 bg-zinc-50 p-3 space-y-2">
                     <div className="flex items-center justify-between">
@@ -542,14 +515,12 @@ function ClassesContent() {
                       <span className="font-medium text-zinc-900">{selectedClassForDrawer.schedule_summary}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500">{language === 'mn' ? 'Суудлын тоо' : 'Seats'}</span>
-                      <span className="font-medium text-zinc-900">{selectedClassForDrawer.max_seats} {language === 'mn' ? 'сурагч' : 'seats max'}</span>
+                      <span className="text-zinc-500">{language === 'mn' ? 'Суудлын тоо' : 'Capacity'}</span>
+                      <span className="font-medium text-zinc-900">{selectedClassForDrawer.max_seats} {language === 'mn' ? 'сурагч' : 'seats'}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500">{language === 'mn' ? 'Төлбөр' : 'Tuition'}</span>
-                      <span className="font-semibold text-zinc-900">
-                        {selectedClassForDrawer.price_mnt ? `${selectedClassForDrawer.price_mnt.toLocaleString()} ₮` : (language === 'mn' ? 'Үнэгүй' : 'Free')}
-                      </span>
+                      <span className="text-zinc-500">{language === 'mn' ? 'Төлбөр' : 'Cost'}</span>
+                      <span className="font-semibold text-emerald-700">{language === 'mn' ? 'Үнэгүй (100% Free)' : 'Free'}</span>
                     </div>
                   </div>
                 </div>
@@ -558,19 +529,19 @@ function ClassesContent() {
                 {selectedClassForDrawer.missions && Array.isArray(selectedClassForDrawer.missions) && (
                   <div className="space-y-3">
                     <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-900">
-                      {language === 'mn' ? 'Долоо хоногийн даалгавар, төлөвлөгөө' : 'Weekly Missions Roadmap'}
+                      {language === 'mn' ? 'Даалгаврын төлөвлөгөө' : 'Missions Roadmap'}
                     </h4>
                     <div className="space-y-2.5">
                       {selectedClassForDrawer.missions.map((m: any, idx: number) => (
                         <div key={idx} className="rounded-lg border border-zinc-200 p-3 space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-zinc-900">
-                              Week {m.weekNumber || idx + 1}: {m.title}
-                            </span>
+                          <div className="font-semibold text-zinc-900">
+                            Week {m.weekNumber || idx + 1}: {m.title}
                           </div>
-                          <p className="text-zinc-500 text-[11px] leading-relaxed">
-                            {m.description}
-                          </p>
+                          {m.description && (
+                            <p className="text-zinc-500 text-[11px] leading-relaxed">
+                              {m.description}
+                            </p>
+                          )}
                           {m.deliverablePrompt && (
                             <div className="pt-1 text-[11px] text-zinc-700 font-medium">
                               🎯 Deliverable: {m.deliverablePrompt}
@@ -603,8 +574,8 @@ function ClassesContent() {
                     className="btn-primary w-full py-2.5 text-xs font-medium text-white text-center"
                   >
                     {selectedClassForDrawer.enrollment_mode === 'instant'
-                      ? language === 'mn' ? 'Суудал баталгаажуулах' : 'Confirm Seat Now'
-                      : language === 'mn' ? 'Хүсэлт илгээх' : 'Submit Application'}
+                      ? language === 'mn' ? 'Суудал авах (Үнэгүй)' : 'Claim Free Seat'
+                      : language === 'mn' ? 'Хүсэлт илгээх' : 'Apply'}
                   </button>
                 )}
               </div>

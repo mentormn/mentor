@@ -429,8 +429,9 @@ export default function DashboardPage() {
                             <span>{cls.schedule_summary}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <Award className="h-3.5 w-3.5 text-zinc-400" />
-                            <span>{cls.price_mnt ? `${cls.price_mnt.toLocaleString()} ₮` : (language === 'mn' ? 'Үнэгүй' : 'Free')}</span>
+                            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                              {language === 'mn' ? 'Үнэгүй' : 'Free'}
+                            </span>
                           </div>
                         </div>
                       </div>

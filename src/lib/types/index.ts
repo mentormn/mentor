@@ -131,8 +131,10 @@ export interface QuickHelpRequest {
   phoneNumber: string;
   school: string;
   grade: string;
+  gender?: string;
   curriculum: 'National' | 'Cambridge' | 'Both';
   subject: string;
+  helpType?: 'topic' | 'problem' | 'assignment' | 'general';
   title: string;
   description: string;
   attachmentUrl?: string;

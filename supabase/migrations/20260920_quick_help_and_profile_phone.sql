@@ -4,6 +4,7 @@
 
 -- 1. Extend profiles table
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS gender TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS curriculums TEXT[] DEFAULT '{}';
 
 -- 2. Create quick_help_requests table (10-Minute SOS Flash Mentoring)
@@ -14,8 +15,10 @@ CREATE TABLE IF NOT EXISTS public.quick_help_requests (
   phone_number TEXT NOT NULL,
   school TEXT NOT NULL,
   grade TEXT NOT NULL,
+  gender TEXT,
   curriculum TEXT NOT NULL DEFAULT 'National', -- 'National' | 'Cambridge' | 'Both'
   subject TEXT NOT NULL,
+  help_type TEXT NOT NULL DEFAULT 'topic', -- 'topic' | 'problem' | 'assignment' | 'general'
   title TEXT NOT NULL,
   description TEXT NOT NULL,
   attachment_url TEXT,

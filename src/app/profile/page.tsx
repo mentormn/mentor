@@ -42,6 +42,7 @@ export default function ProfilePage() {
   const [editLocation, setEditLocation] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editGrade, setEditGrade] = useState('10-р анги');
+  const [editGender, setEditGender] = useState('Male');
   const [editCurriculums, setEditCurriculums] = useState<string[]>(['National']);
   const [editBio, setEditBio] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -69,6 +70,7 @@ export default function ProfilePage() {
           setEditLocation(profData.location || '');
           setEditPhone(profData.phone || '');
           setEditGrade(profData.grade || '10-р анги');
+          setEditGender(profData.gender || 'Male');
           setEditCurriculums(profData.curriculums || ['National']);
           setEditBio(profData.bio || '');
         }
@@ -153,6 +155,7 @@ export default function ProfilePage() {
           location: editLocation,
           phone: editPhone,
           grade: editGrade,
+          gender: editGender,
           curriculums: editCurriculums,
           bio: editBio,
           updated_at: new Date().toISOString(),
@@ -167,6 +170,7 @@ export default function ProfilePage() {
         location: editLocation,
         phone: editPhone,
         grade: editGrade,
+        gender: editGender,
         curriculums: editCurriculums,
         bio: editBio,
       });
@@ -215,6 +219,11 @@ export default function ProfilePage() {
                 {profile?.grade && (
                   <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-700">
                     {profile.grade}
+                  </span>
+                )}
+                {profile?.gender && (
+                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600">
+                    {profile.gender === 'Female' ? (language === 'mn' ? 'Эмэгтэй' : 'Female') : (language === 'mn' ? 'Эрэгтэй' : 'Male')}
                   </span>
                 )}
               </div>
@@ -296,6 +305,20 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-1">
+                <label className="text-xs font-medium text-zinc-700">
+                  {language === 'mn' ? 'Хүйс' : 'Gender'}
+                </label>
+                <select
+                  value={editGender}
+                  onChange={(e) => setEditGender(e.target.value)}
+                  className="saas-input bg-white"
+                >
+                  <option value="Male">{language === 'mn' ? 'Эрэгтэй' : 'Male'}</option>
+                  <option value="Female">{language === 'mn' ? 'Эмэгтэй' : 'Female'}</option>
+                </select>
+              </div>
+
+              <div className="space-y-1 sm:col-span-2">
                 <label className="text-xs font-medium text-zinc-700">
                   {language === 'mn' ? 'Байршил / Аймаг, Дүүрэг' : 'Location / District'}
                 </label>

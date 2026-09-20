@@ -33,6 +33,7 @@ function LoginForm() {
   const [phone, setPhone] = useState('');
   const [school, setSchool] = useState('');
   const [grade, setGrade] = useState('10');
+  const [gender, setGender] = useState<'Male' | 'Female'>('Male');
   const [curriculumDropdown, setCurriculumDropdown] = useState<'National' | 'Cambridge' | 'Both'>('National');
   const [selectedCurriculums, setSelectedCurriculums] = useState<string[]>(['National']);
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -94,6 +95,7 @@ function LoginForm() {
               phone: phone.trim(),
               school: school.trim(),
               grade: `${grade}-р анги`,
+              gender,
               curriculums: selectedCurriculums,
               avatar_url: avatarUrl.trim() || undefined,
             },
@@ -111,6 +113,7 @@ function LoginForm() {
               phone: phone.trim(),
               school: school.trim(),
               grade: `${grade}-р анги`,
+              gender,
               curriculums: selectedCurriculums,
               avatar_url: avatarUrl.trim() || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
             });
@@ -303,6 +306,32 @@ function LoginForm() {
                         }`}
                       >
                         {g}-р анги
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3.5 Gender Selection */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-700">
+                    {language === 'mn' ? 'Хүйс' : 'Gender'} *
+                  </label>
+                  <div className="flex gap-2">
+                    {[
+                      { key: 'Male', labelMn: 'Эрэгтэй', labelEn: 'Male' },
+                      { key: 'Female', labelMn: 'Эмэгтэй', labelEn: 'Female' }
+                    ].map((item) => (
+                      <button
+                        type="button"
+                        key={item.key}
+                        onClick={() => setGender(item.key as any)}
+                        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition-all ${
+                          gender === item.key
+                            ? 'bg-zinc-900 text-white border-zinc-900 shadow-xs'
+                            : 'bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100'
+                        }`}
+                      >
+                        {language === 'mn' ? item.labelMn : item.labelEn}
                       </button>
                     ))}
                   </div>

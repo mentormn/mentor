@@ -57,15 +57,12 @@ function SOSContent() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Form states
-  const [studentName, setStudentName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [schoolName, setSchoolName] = useState('');
-  const [selectedGrade, setSelectedGrade] = useState('10');
+  // Form states (Topic / Concept / Problem / Assignment)
+  const [helpType, setHelpType] = useState<'topic' | 'problem' | 'assignment' | 'general'>('topic');
   const [curriculum, setCurriculum] = useState<'National' | 'Cambridge' | 'Both'>('National');
   const [selectedSubject, setSelectedSubject] = useState(SUBJECT_LIST[0]);
-  const [problemTitle, setProblemTitle] = useState('');
-  const [problemDescription, setProblemDescription] = useState('');
+  const [topicTitle, setTopicTitle] = useState('');
+  const [topicDescription, setTopicDescription] = useState('');
   const [attachmentUrl, setAttachmentUrl] = useState('');
   
   const [submitting, setSubmitting] = useState(false);
@@ -77,6 +74,7 @@ function SOSContent() {
   const [subjectFilter, setSubjectFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [gradeFilter, setGradeFilter] = useState('All');
+  const [helpTypeFilter, setHelpTypeFilter] = useState('All');
 
   // Load auth & profile
   useEffect(() => {
@@ -93,12 +91,12 @@ function SOSContent() {
 
           if (prof) {
             setProfile(prof);
-            if (prof.name) setStudentName(prof.name);
-            if (prof.phone) setPhoneNumber(prof.phone);
-            if (prof.school && prof.school !== 'General Education School') setSchoolName(prof.school);
-            if (prof.grade) {
-              const grMatch = prof.grade.match(/\d+/);
-              if (grMatch) setSelectedGrade(grMatch[0]);
+            if (prof.curriculums?.includes('National') && prof.curriculums?.includes('Cambridge')) {
+              setCurriculum('Both');
+            } else if (prof.curriculums?.includes('Cambridge')) {
+              setCurriculum('Cambridge');
+            } else if (prof.curriculums?.includes('National')) {
+              setCurriculum('National');
             }
           }
         }
@@ -122,7 +120,6 @@ function SOSContent() {
 
       if (error) {
         console.log('Using local memory for SOS requests fallback:', error.message);
-        // Fallback to local storage if table is not yet created in Supabase
         const saved = localStorage.getItem('mentormn_sos_requests');
         if (saved) {
           setRequests(JSON.parse(saved));
@@ -135,8 +132,10 @@ function SOSContent() {
           phoneNumber: r.phone_number,
           school: r.school,
           grade: r.grade,
+          gender: r.gender,
           curriculum: r.curriculum,
           subject: r.subject,
+          helpType: r.help_type || 'topic',
           title: r.title,
           description: r.description,
           attachmentUrl: r.attachment_url,
@@ -180,35 +179,49 @@ function SOSContent() {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!studentName.trim()) {
-      setErrorMessage(language === 'mn' ? 'Нэрээ оруулна уу.' : 'Please enter your name.');
+    if (!currentUser) {
+      router.push('/login?redirectTo=/sos?tab=ask');
       return;
     }
+
+    const studentName = profile?.name || currentUser?.user_metadata?.name || currentUser?.email?.split('@')[0] || 'Student';
+    const phoneNumber = profile?.phone || currentUser?.user_metadata?.phone || '';
+    const school = profile?.school || currentUser?.user_metadata?.school || 'Secondary School';
+    const grade = profile?.grade || currentUser?.user_metadata?.grade || '10-р анги';
+    const gender = profile?.gender || currentUser?.user_metadata?.gender || 'Male';
+
     if (!phoneNumber.trim()) {
-      setErrorMessage(language === 'mn' ? 'Утасны дугаараа оруулна уу.' : 'Please enter your phone number.');
+      setErrorMessage(
+        language === 'mn'
+          ? 'Таны утасны дугаар бүртгэгдээгүй байна. Профайл хэсэгтээ утасны дугаараа оруулна уу.'
+          : 'Please add your phone number in your profile so mentors can contact you.'
+      );
       return;
     }
-    if (!schoolName.trim()) {
-      setErrorMessage(language === 'mn' ? 'Сургуулийн нэрээ оруулна уу.' : 'Please enter your school.');
-      return;
-    }
-    if (!problemTitle.trim() || !problemDescription.trim()) {
-      setErrorMessage(language === 'mn' ? 'Бодлогын гарчиг болон ойлгохгүй байгаа зүйлээ тайлбарлана уу.' : 'Please enter problem title and description.');
+
+    if (!topicTitle.trim() || !topicDescription.trim()) {
+      setErrorMessage(
+        language === 'mn'
+          ? 'Сэдэв, бодлогын гарчиг болон ойлгохгүй байгаа зүйлээ тайлбарлана уу.'
+          : 'Please enter topic/problem title and description.'
+      );
       return;
     }
 
     setSubmitting(true);
 
     const newRequest: Partial<QuickHelpRequest> = {
-      studentId: currentUser?.id || undefined,
-      studentName: studentName.trim(),
+      studentId: currentUser.id,
+      studentName,
       phoneNumber: phoneNumber.trim(),
-      school: schoolName.trim(),
-      grade: `${selectedGrade}-р анги`,
+      school,
+      grade,
+      gender,
       curriculum,
       subject: selectedSubject.split(' (')[0],
-      title: problemTitle.trim(),
-      description: problemDescription.trim(),
+      helpType,
+      title: topicTitle.trim(),
+      description: topicDescription.trim(),
       attachmentUrl: attachmentUrl.trim() || undefined,
       status: 'open',
     };
@@ -222,8 +235,10 @@ function SOSContent() {
           phone_number: newRequest.phoneNumber,
           school: newRequest.school,
           grade: newRequest.grade,
+          gender: newRequest.gender,
           curriculum: newRequest.curriculum,
           subject: newRequest.subject,
+          help_type: newRequest.helpType,
           title: newRequest.title,
           description: newRequest.description,
           attachment_url: newRequest.attachmentUrl,
@@ -234,16 +249,17 @@ function SOSContent() {
 
       if (error) {
         console.log('Falling back to local storage for SOS request:', error.message);
-        // Fallback local storage
         const mockItem: QuickHelpRequest = {
           id: 'local-' + Date.now(),
-          studentId: currentUser?.id,
+          studentId: currentUser.id,
           studentName: newRequest.studentName!,
           phoneNumber: newRequest.phoneNumber!,
           school: newRequest.school!,
           grade: newRequest.grade!,
+          gender: newRequest.gender,
           curriculum: newRequest.curriculum as any,
           subject: newRequest.subject!,
+          helpType: newRequest.helpType,
           title: newRequest.title!,
           description: newRequest.description!,
           attachmentUrl: newRequest.attachmentUrl,
@@ -255,13 +271,13 @@ function SOSContent() {
         localStorage.setItem('mentormn_sos_requests', JSON.stringify(current));
       }
 
-      setProblemTitle('');
-      setProblemDescription('');
+      setTopicTitle('');
+      setTopicDescription('');
       setAttachmentUrl('');
       setNotification(
         language === 'mn'
-          ? 'Таны асуулт амжилттай нийтлэгдлээ! Шилдэг ментор удахгүй холбогдож 10 минутад тайлбарлаж өгнө.'
-          : 'Your problem has been posted! A verified mentor will claim it shortly for a 10-minute explanation.'
+          ? 'Таны хүсэлт амжилттай нийтлэгдлээ! Шилдэг ментор удахгүй холбогдож 10 минутад тайлбарлаж өгнө.'
+          : 'Your request has been posted! A verified mentor will claim it shortly for a 10-minute explanation.'
       );
       setActiveTab('my');
       fetchRequests();
@@ -358,7 +374,7 @@ function SOSContent() {
   // Filter for student's own requests
   const myRequests = requests.filter((r) => {
     if (currentUser && r.studentId === currentUser.id) return true;
-    if (phoneNumber && r.phoneNumber === phoneNumber) return true;
+    if (profile?.phone && r.phoneNumber === profile.phone) return true;
     return false;
   });
 
@@ -376,20 +392,20 @@ function SOSContent() {
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
               {language === 'mn' ? (
                 <>
-                  Ойлгохгүй гацсан бодлогоо оруулж, <br />
+                  Ойлгохгүй байгаа сэдэв, бодлогоо оруулж, <br />
                   <span className="text-amber-300">10 минутад шуурхай тайлбар ав.</span>
                 </>
               ) : (
                 <>
-                  Stuck on a problem? <br />
+                  Stuck on a topic or problem? <br />
                   <span className="text-amber-300">Get a quick 10-minute 1-on-1 explanation.</span>
                 </>
               )}
             </h1>
             <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
               {language === 'mn'
-                ? 'Гэрийн даалгавар, олимпиад, шалгалтын бодлогын ойлгохгүй байгаа хэсгээ нийтэл. Шилдэг менторууд таны асуултыг сонгон авч шууд Google Meet-ээр 10 минутад ганцаарчлан тайлбарлаж өгнө.'
-                : 'Post any problem or concept you are struggling with. A proven mentor will pick up your question and explain it in a fast, focused 10-minute live session.'}
+                ? 'Хичээлийн сэдэв, онол, бодлого эсвэл даалгаврын ойлгохгүй байгаа хэсгээ нийтэл. Шилдэг менторууд таны хүсэлтийг сонгон авч шууд Google Meet-ээр 10 минутад ганцаарчлан тайлбарлаж өгнө.'
+                : 'Post any topic, concept, problem, or assignment you are struggling with. A proven mentor will pick up your question and explain it in a fast, focused 10-minute live session.'}
             </p>
           </div>
 
@@ -399,7 +415,7 @@ function SOSContent() {
               className="px-6 py-3 rounded-xl text-xs font-bold bg-white text-zinc-900 hover:bg-zinc-100 transition-all shadow-md flex items-center justify-center gap-2"
             >
               <HelpCircle className="h-4 w-4 text-amber-500" />
-              <span>{language === 'mn' ? 'Бодлого оруулах' : 'Ask for Help'}</span>
+              <span>{language === 'mn' ? 'Тусламж хүсэх' : 'Ask for Help'}</span>
             </button>
             <button
               onClick={() => setActiveTab('queue')}
@@ -434,7 +450,7 @@ function SOSContent() {
           }`}
         >
           <HelpCircle className="h-4 w-4" />
-          <span>{language === 'mn' ? 'Асуулт илгээх' : 'Ask 10-Min Help'}</span>
+          <span>{language === 'mn' ? 'Тусламж хүсэх' : 'Request Help'}</span>
         </button>
 
         <button
@@ -476,12 +492,12 @@ function SOSContent() {
           <div className="space-y-1.5 border-b border-zinc-100 pb-4">
             <h2 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
               <Zap className="h-5 w-5 text-amber-500" />
-              <span>{language === 'mn' ? '10-Минутын Шуурхай Тусламж Авах' : 'Request 10-Minute Peer Help'}</span>
+              <span>{language === 'mn' ? '10-Минутын Шуурхай Тусламж Хүсэх' : 'Request 10-Minute Peer Help'}</span>
             </h2>
             <p className="text-xs text-zinc-500">
               {language === 'mn'
-                ? 'Таны оруулсан мэдээллийн дагуу тохирох ментор хүсэлтийг тань авч, Google Meet-ээр холбогдох болно.'
-                : 'Fill in your details and problem description. A mentor will claim your request and connect with you.'}
+                ? 'Хичээлийн сэдэв, онол, бодлого эсвэл даалгавар дээрээ гацсан бол энд нийтлээрэй. Шилдэг ментор 10 минутын дотор ганцаарчлан зааж өгнө.'
+                : 'Stuck on a topic, theory, problem, or assignment? Post it here and a proven mentor will explain it in a fast 10-minute 1-on-1 session.'}
             </p>
           </div>
 
@@ -492,119 +508,102 @@ function SOSContent() {
             </div>
           )}
 
-          <form onSubmit={handleAskHelp} className="space-y-5">
-            {/* Student Info Section */}
-            <div className="space-y-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                {language === 'mn' ? '1. Сурагчийн мэдээлэл' : '1. Student Information'}
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-zinc-700">
-                    {language === 'mn' ? 'Таны бүтэн нэр' : 'Full Name'} *
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Тэмүүлэн Батбаяр"
-                      value={studentName}
-                      onChange={(e) => setStudentName(e.target.value)}
-                      className="saas-input pl-9"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-zinc-700">
-                    {language === 'mn' ? 'Утасны дугаар' : 'Phone Number'} *
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
-                    <input
-                      type="tel"
-                      required
-                      placeholder="9911-XXXX"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="saas-input pl-9 font-mono"
-                    />
-                  </div>
-                  <span className="text-[10px] text-zinc-400">
-                    {language === 'mn' ? 'Ментор шаардлагатай үед шууд холбогдох боломжтой.' : 'Mentor will use this to coordinate with you.'}
-                  </span>
-                </div>
+          {!currentUser ? (
+            /* If Not Logged In */
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-8 text-center space-y-4">
+              <div className="h-12 w-12 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center mx-auto shadow-sm">
+                <User className="h-6 w-6" />
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-zinc-700">
-                    {language === 'mn' ? 'Сургууль' : 'School'} *
-                  </label>
-                  <div className="relative">
-                    <School className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. 1-р сургууль, Сант, Орчлон"
-                      value={schoolName}
-                      onChange={(e) => setSchoolName(e.target.value)}
-                      className="saas-input pl-9"
-                    />
-                  </div>
-                </div>
-
-                {/* Grade Pills */}
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-zinc-700">
-                    {language === 'mn' ? 'Хэддүгээр анги вэ?' : 'Grade'}
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {['6', '7', '8', '9', '10', '11', '12'].map((g) => (
-                      <button
-                        type="button"
-                        key={g}
-                        onClick={() => setSelectedGrade(g)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                          selectedGrade === g
-                            ? 'bg-zinc-900 text-white border-zinc-900 shadow-xs'
-                            : 'bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100'
-                        }`}
-                      >
-                        {g}-р анги
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-zinc-900">
+                  {language === 'mn' ? 'Шуурхай тусламж авахын тулд нэвтэрнэ үү' : 'Please Sign In to Request 10-Min Help'}
+                </h3>
+                <p className="text-xs text-zinc-600 max-w-md mx-auto">
+                  {language === 'mn'
+                    ? 'Таныг бүртгүүлэхэд оруулсан нэр, утасны дугаар, сургууль, анги, хүйс автоматаар менторт харагдах тул дахин бөглөх шаардлагагүй.'
+                    : 'Your registered name, phone, school, grade, and gender will be attached automatically so you don’t need to re-type them.'}
+                </p>
               </div>
+              <Link
+                href="/login?redirectTo=/sos"
+                className="btn-primary inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white shadow-sm rounded-xl"
+              >
+                <span>{language === 'mn' ? 'Нэвтрэх / Бүртгүүлэх' : 'Sign In / Register'}</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-
-            {/* Academic Problem Section */}
-            <div className="space-y-4 pt-4 border-t border-zinc-100">
-              <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                {language === 'mn' ? '2. Гацсан бодлого & Асуулт' : '2. Problem & Concept Details'}
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Curriculum */}
+          ) : (
+            /* Logged In Form */
+            <form onSubmit={handleAskHelp} className="space-y-6">
+              
+              {/* Student Information Auto-attached Badge */}
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-zinc-700">
-                    {language === 'mn' ? 'Хөтөлбөр' : 'Curriculum'}
-                  </label>
-                  <select
-                    value={curriculum}
-                    onChange={(e) => setCurriculum(e.target.value as any)}
-                    className="saas-input bg-white text-xs"
-                  >
-                    <option value="National">{language === 'mn' ? 'Үндэсний хөтөлбөр (National)' : 'National Curriculum'}</option>
-                    <option value="Cambridge">{language === 'mn' ? 'Кембриж хөтөлбөр (Cambridge)' : 'Cambridge Curriculum'}</option>
-                    <option value="Both">{language === 'mn' ? 'Хоёулаа (National & Cambridge)' : 'Both Curricula'}</option>
-                  </select>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                    {language === 'mn' ? 'Сурагчийн мэдээлэл (Таны бүртгэлээс автоматаар хавсаргагдана):' : 'Student Info (Auto-attached from your account):'}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2 text-zinc-700">
+                    <span className="font-bold text-zinc-900 flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5 text-blue-600" />
+                      {profile?.name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0]}
+                    </span>
+                    <span>•</span>
+                    <span className="font-mono text-zinc-600">
+                      {profile?.phone || currentUser.user_metadata?.phone || (
+                        <Link href="/profile" className="text-amber-600 underline font-sans font-semibold">Утасны дугаараа оруулах</Link>
+                      )}
+                    </span>
+                    <span>•</span>
+                    <span className="text-zinc-600">{profile?.school || currentUser.user_metadata?.school || 'Сургууль'}</span>
+                    <span>•</span>
+                    <span className="font-semibold text-zinc-800">{profile?.grade || currentUser.user_metadata?.grade || 'Анги'}</span>
+                    {(profile?.gender || currentUser.user_metadata?.gender) && (
+                      <>
+                        <span>•</span>
+                        <span className="text-zinc-600">
+                          {(profile?.gender || currentUser.user_metadata?.gender) === 'Female' ? 'Эмэгтэй' : 'Эрэгтэй'}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
+                <Link href="/profile" className="text-[11px] text-blue-600 hover:underline font-semibold shrink-0">
+                  {language === 'mn' ? 'Мэдээлэл засах' : 'Edit Info'}
+                </Link>
+              </div>
 
-                {/* Subject */}
+              {/* Help Type Selector */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-zinc-800 flex items-center gap-1.5">
+                  <HelpCircle className="h-3.5 w-3.5 text-zinc-600" />
+                  <span>{language === 'mn' ? 'Ямар төрлийн тусламж хэрэгтэй байна вэ?' : 'What kind of help do you need?'}</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: 'topic', labelMn: '📖 Сэдэв / Онол', labelEn: '📖 Topic / Theory' },
+                    { id: 'problem', labelMn: '✏️ Бодлого бодох арга', labelEn: '✏️ Problem Solving' },
+                    { id: 'assignment', labelMn: '📝 Даалгавар / Шалгалт', labelEn: '📝 Assignment / Exam' },
+                    { id: 'general', labelMn: '💡 Чөлөөт асуулт', labelEn: '💡 General Question' }
+                  ].map((t) => (
+                    <button
+                      type="button"
+                      key={t.id}
+                      onClick={() => setHelpType(t.id as any)}
+                      className={`p-2.5 rounded-xl text-xs font-semibold border transition-all text-left flex items-center justify-between ${
+                        helpType === t.id
+                          ? 'bg-zinc-900 text-white border-zinc-900 shadow-sm'
+                          : 'bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100'
+                      }`}
+                    >
+                      <span>{language === 'mn' ? t.labelMn : t.labelEn}</span>
+                      {helpType === t.id && <Check className="h-3 w-3 text-amber-300" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Subject & Curriculum */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-zinc-700">
                     {language === 'mn' ? 'Хичээл' : 'Subject'} *
@@ -619,19 +618,34 @@ function SOSContent() {
                     ))}
                   </select>
                 </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-zinc-700">
+                    {language === 'mn' ? 'Хөтөлбөр' : 'Curriculum'}
+                  </label>
+                  <select
+                    value={curriculum}
+                    onChange={(e) => setCurriculum(e.target.value as any)}
+                    className="saas-input bg-white text-xs"
+                  >
+                    <option value="National">{language === 'mn' ? 'Үндэсний хөтөлбөр (National)' : 'National Curriculum'}</option>
+                    <option value="Cambridge">{language === 'mn' ? 'Кембриж хөтөлбөр (Cambridge)' : 'Cambridge Curriculum'}</option>
+                    <option value="Both">{language === 'mn' ? 'Хоёулаа (National & Cambridge)' : 'Both Curricula'}</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Title */}
+              {/* Topic / Problem Title */}
               <div className="space-y-1">
                 <label className="text-xs font-medium text-zinc-700">
-                  {language === 'mn' ? 'Бодлогын сэдэв / Гарчиг' : 'Problem Topic or Title'} *
+                  {language === 'mn' ? 'Сэдэв, бодлого эсвэл асуултын гарчиг' : 'Topic, problem or concept title'} *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={language === 'mn' ? 'e.g. Тригонометр - Давхар өнцгийн томьёо ашиглах бодлого' : 'e.g. Kinematics Problem 4 on Projectile Motion'}
-                  value={problemTitle}
-                  onChange={(e) => setProblemTitle(e.target.value)}
+                  placeholder={language === 'mn' ? 'e.g. Квадрат тэгшитгэл, Ньютоны 2-р хууль, Эсийн хуваагдал, 15-р хуудасны 3-р бодлого г.м' : 'e.g. Projectile Motion, Photosynthesis, Quadratic Equations'}
+                  value={topicTitle}
+                  onChange={(e) => setTopicTitle(e.target.value)}
                   className="saas-input text-xs"
                 />
               </div>
@@ -645,10 +659,10 @@ function SOSContent() {
                   rows={4}
                   required
                   placeholder={language === 'mn' 
-                    ? 'e.g. Бодлогын эхний хэсгийг бодоод 2-р алхам дээр томьёо орлуулах үед яагаад ийм үр дүн гарч байгааг огт ойлгохгүй байна. 10 минутад тайлбарлаж өгөөч.'
-                    : 'e.g. I got stuck on step 2 when substituting the equations. Looking for a mentor to clarify why this step is used.'}
-                  value={problemDescription}
-                  onChange={(e) => setProblemDescription(e.target.value)}
+                    ? 'e.g. Энэ сэдвийн томьёог хэрэглэх үед яагаад ийм үр дүн гарч байгааг огт ойлгохгүй байна, эсвэл бодлогын 2-р алхам дээр гацсан. 10 минутад ойлгомжтой тайлбарлаж өгөөч...'
+                    : 'e.g. I got stuck on this concept / formula. Looking for a mentor to clarify how it works in 10 minutes...'}
+                  value={topicDescription}
+                  onChange={(e) => setTopicDescription(e.target.value)}
                   className="saas-input text-xs leading-relaxed"
                 />
               </div>
@@ -657,7 +671,7 @@ function SOSContent() {
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-medium text-zinc-700">
-                    {language === 'mn' ? 'Бодлогын зураг эсвэл холбоос' : 'Problem Image or Link'}
+                    {language === 'mn' ? 'Зураг, даалгаврын холбоос' : 'Problem Photo or Doc Link'}
                   </label>
                   <span className="text-[10px] text-zinc-400">
                     {language === 'mn' ? 'Заавал биш / Optional' : 'Optional'}
@@ -674,17 +688,17 @@ function SOSContent() {
                   />
                 </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="btn-primary w-full py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
-            >
-              <Zap className="h-4 w-4 text-amber-400" />
-              <span>{submitting ? (language === 'mn' ? 'Илгээж байна...' : 'Submitting...') : (language === 'mn' ? '10-Минутын Тусламж Хүсэх' : 'Submit 10-Min SOS Request')}</span>
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="btn-primary w-full py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+              >
+                <Zap className="h-4 w-4 text-amber-400" />
+                <span>{submitting ? (language === 'mn' ? 'Илгээж байна...' : 'Submitting...') : (language === 'mn' ? '10-Минутын Шуурхай Тусламж Хүсэх' : 'Submit 10-Min SOS Request')}</span>
+              </button>
+            </form>
+          )}
         </div>
       )}
 
@@ -737,6 +751,19 @@ function SOSContent() {
                   <option key={g} value={g}>{g}-р анги</option>
                 ))}
               </select>
+
+              {/* Help Type Filter */}
+              <select
+                value={helpTypeFilter}
+                onChange={(e) => setHelpTypeFilter(e.target.value)}
+                className="saas-input py-1 px-2.5 text-xs bg-white w-auto"
+              >
+                <option value="All">{language === 'mn' ? 'Бүх төрөл' : 'All Types'}</option>
+                <option value="topic">{language === 'mn' ? '📖 Сэдэв / Онол' : 'Topic / Theory'}</option>
+                <option value="problem">{language === 'mn' ? '✏️ Бодлого' : 'Problem Solving'}</option>
+                <option value="assignment">{language === 'mn' ? '📝 Даалгавар' : 'Assignment'}</option>
+                <option value="general">{language === 'mn' ? '💡 Чөлөөт асуулт' : 'General'}</option>
+              </select>
             </div>
 
             <div className="text-xs text-zinc-500 font-medium">
@@ -755,7 +782,7 @@ function SOSContent() {
               </h3>
               <p className="text-xs text-zinc-500 max-w-sm mx-auto">
                 {language === 'mn'
-                  ? 'Сурагчид шинээр бодлого оруулах үед энд шууд гарч ирнэ.'
+                  ? 'Сурагчид шинээр сэдэв, бодлого оруулах үед энд шууд гарч ирнэ.'
                   : 'New student questions will appear here in real time.'}
               </p>
             </div>
@@ -778,6 +805,9 @@ function SOSContent() {
                       {/* Top Badges */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-100">
+                            {item.helpType === 'topic' ? '📖 Сэдэв' : item.helpType === 'problem' ? '✏️ Бодлого' : item.helpType === 'assignment' ? '📝 Даалгавар' : '💡 Асуулт'}
+                          </span>
                           <span className="badge-accent text-xs">
                             {item.subject}
                           </span>
@@ -823,15 +853,30 @@ function SOSContent() {
                         </div>
                       )}
 
-                      {/* Student Info Card */}
-                      <div className="pt-2 border-t border-zinc-100 text-xs text-zinc-600 space-y-1">
+                      {/* Student Info Card (Pulled automatically from student signup profile) */}
+                      <div className="pt-2.5 border-t border-zinc-100 text-xs text-zinc-600 space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-zinc-900">{item.studentName}</span>
-                          <span className="text-zinc-500">{item.school}</span>
+                          <div className="flex items-center gap-2">
+                            <User className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                            <span className="font-bold text-zinc-900">{item.studentName}</span>
+                            {item.gender && (
+                              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600">
+                                {item.gender === 'Female' ? 'Эмэгтэй' : 'Эрэгтэй'}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-zinc-500 font-medium">{item.school}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-zinc-700 font-mono text-[11px]">
-                          <Phone className="h-3 w-3 text-zinc-400" />
-                          <span>Утас: {item.phoneNumber}</span>
+                        <div className="flex items-center justify-between text-[11px]">
+                          <a
+                            href={`tel:${item.phoneNumber}`}
+                            className="flex items-center gap-1.5 text-blue-600 hover:underline font-mono font-semibold"
+                            title="Шууд залгах"
+                          >
+                            <Phone className="h-3 w-3 text-blue-500" />
+                            <span>Утас: {item.phoneNumber}</span>
+                          </a>
+                          <span className="text-zinc-500 font-medium">{item.grade}</span>
                         </div>
                       </div>
                     </div>

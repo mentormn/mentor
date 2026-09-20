@@ -65,14 +65,22 @@ export default function ProfilePage() {
           .single();
 
         if (profData) {
-          setProfile(profData);
-          setEditSchool(profData.school || '');
+          const userMeta = session.user.user_metadata || {};
+          const mergedProfile = {
+            ...profData,
+            bio: profData.bio || userMeta.bio || '',
+            phone: profData.phone || userMeta.phone || '',
+            gender: profData.gender || userMeta.gender || 'Male',
+            curriculums: profData.curriculums || userMeta.curriculums || ['National'],
+          };
+          setProfile(mergedProfile);
+          setEditSchool(profData.school || userMeta.school || '');
           setEditLocation(profData.location || '');
-          setEditPhone(profData.phone || '');
-          setEditGrade(profData.grade || '10-р анги');
-          setEditGender(profData.gender || 'Male');
-          setEditCurriculums(profData.curriculums || ['National']);
-          setEditBio(profData.bio || '');
+          setEditPhone(profData.phone || userMeta.phone || '');
+          setEditGrade(profData.grade || userMeta.grade || '10-р анги');
+          setEditGender(profData.gender || userMeta.gender || 'Male');
+          setEditCurriculums(profData.curriculums || userMeta.curriculums || ['National']);
+          setEditBio(profData.bio || userMeta.bio || '');
         }
 
         // Fetch enrolled classes
@@ -148,21 +156,66 @@ export default function ProfilePage() {
     if (!currentUser) return;
 
     try {
-      const { error } = await supabase
+      const updatePayload: Record<string, any> = {
+        school: editSchool,
+        location: editLocation,
+        phone: editPhone,
+        grade: editGrade,
+        gender: editGender,
+        curriculums: editCurriculums,
+        bio: editBio,
+        updated_at: new Date().toISOString(),
+      };
+
+      let { error } = await supabase
         .from('profiles')
-        .update({
-          school: editSchool,
-          location: editLocation,
-          phone: editPhone,
-          grade: editGrade,
-          gender: editGender,
-          curriculums: editCurriculums,
-          bio: editBio,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq('id', currentUser.id);
 
+      // If database is missing the 'bio' column in schema cache, omit it and retry
+      if (error && (error.message?.includes("'bio'") || error.message?.includes("bio"))) {
+        console.warn("Retrying profile update without 'bio' column:", error.message);
+        delete updatePayload.bio;
+        const retry = await supabase
+          .from('profiles')
+          .update(updatePayload)
+          .eq('id', currentUser.id);
+        error = retry.error;
+      }
+
+      // If database is missing any other newly added column (phone, gender, curriculums), retry with core fields
+      if (error && error.message?.includes('schema cache')) {
+        console.warn("Schema cache mismatch, retrying with core fields:", error.message);
+        const fallbackPayload: Record<string, any> = {
+          school: editSchool,
+          location: editLocation,
+          grade: editGrade,
+          updated_at: new Date().toISOString(),
+        };
+        const retry = await supabase
+          .from('profiles')
+          .update(fallbackPayload)
+          .eq('id', currentUser.id);
+        error = retry.error;
+      }
+
       if (error) throw error;
+
+      // Also save bio, phone, gender to user_metadata as a safety backup
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            bio: editBio,
+            phone: editPhone,
+            gender: editGender,
+            school: editSchool,
+            grade: editGrade,
+            curriculums: editCurriculums,
+          }
+        });
+      } catch (authErr) {
+        console.warn('Could not update user metadata backup:', authErr);
+      }
 
       setProfile({
         ...profile,

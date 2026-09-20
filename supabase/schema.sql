@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   avatar_url TEXT DEFAULT 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  bio TEXT,
   gender TEXT DEFAULT 'Prefer not to say',
   age INTEGER DEFAULT 17,
   grade TEXT DEFAULT '11th Grade',

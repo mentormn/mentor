@@ -6,6 +6,7 @@
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS gender TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS curriculums TEXT[] DEFAULT '{}';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS bio TEXT;
 
 -- 2. Create quick_help_requests table (10-Minute SOS Flash Mentoring)
 CREATE TABLE IF NOT EXISTS public.quick_help_requests (

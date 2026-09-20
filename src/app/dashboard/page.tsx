@@ -21,7 +21,8 @@ import {
   ChevronRight,
   TrendingUp,
   FileCheck,
-  Compass
+  Compass,
+  MessageSquare
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -356,7 +357,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2.5 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
                       {cls.meeting_link && (
                         <a
                           href={cls.meeting_link}
@@ -368,6 +369,13 @@ export default function DashboardPage() {
                           <span>{language === 'mn' ? 'Хичээлд орох' : 'Join Meet'}</span>
                         </a>
                       )}
+                      <Link
+                        href={`/class/${cls.id}?tab=discussions`}
+                        className="btn-secondary inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-100 border-zinc-200"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5 text-zinc-500" />
+                        <span>{language === 'mn' ? 'Групп чат' : 'Chat'}</span>
+                      </Link>
                       <Link
                         href={`/class/${cls.id}`}
                         className="btn-primary inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-white"
@@ -429,14 +437,13 @@ export default function DashboardPage() {
                             <span>{cls.schedule_summary}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                              {language === 'mn' ? 'Үнэгүй' : 'Free'}
-                            </span>
+                            <span className="text-xs text-zinc-400">•</span>
+                            <span>{cls.duration_weeks} {language === 'mn' ? 'долоо хоног' : 'weeks'}</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2.5 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0">
                         {cls.meeting_link && (
                           <a
                             href={cls.meeting_link}
@@ -448,6 +455,13 @@ export default function DashboardPage() {
                             <span>{language === 'mn' ? 'Шууд уулзалт' : 'Launch Meet'}</span>
                           </a>
                         )}
+                        <Link
+                          href={`/class/${cls.id}?tab=discussions`}
+                          className="btn-secondary inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-100 border-zinc-200"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5 text-zinc-500" />
+                          <span>{language === 'mn' ? 'Групп чат' : 'Chat'}</span>
+                        </Link>
                         <Link
                           href={`/class/${cls.id}`}
                           className="btn-primary inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-white"

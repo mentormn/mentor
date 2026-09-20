@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { useLanguage } from '@/lib/i18n';
 import { FormalTier, Mission, SprintDiscussion } from '@/lib/types';
@@ -14,18 +15,22 @@ import {
   CheckCircle2, 
   Upload, 
   ExternalLink, 
-  ArrowLeft,
-  FileCheck,
-  MessageSquare,
-  Send,
-  Award,
-  BookOpen,
-  ChevronRight,
-  ShieldCheck,
-  AlertCircle
+  ArrowLeft, 
+  FileCheck, 
+  MessageSquare, 
+  Send, 
+  Award, 
+  BookOpen, 
+  ChevronRight, 
+  ShieldCheck, 
+  AlertCircle,
+  Sparkles,
+  MessageCircle
 } from 'lucide-react';
 
 export default function ClassSpaceClient({ classId }: { classId: string }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { language, t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
@@ -38,7 +43,8 @@ export default function ClassSpaceClient({ classId }: { classId: string }) {
   const [discussions, setDiscussions] = useState<SprintDiscussion[]>([]);
 
   // Interactive states
-  const [activeTab, setActiveTab] = useState<'missions' | 'discussions' | 'roster'>('missions');
+  const initialTab = searchParams.get('tab') === 'discussions' ? 'discussions' : 'missions';
+  const [activeTab, setActiveTab] = useState<'missions' | 'discussions' | 'roster'>(initialTab);
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [deliverableTitle, setDeliverableTitle] = useState('');
   const [deliverableUrl, setDeliverableUrl] = useState('');
@@ -47,18 +53,22 @@ export default function ClassSpaceClient({ classId }: { classId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+
   const loadData = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setCurrentUser(session.user);
-        const { data: prof } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        if (prof) setProfile(prof);
+      if (!session?.user) {
+        router.push(`/login?redirectTo=/class/${classId}`);
+        return;
       }
+      setCurrentUser(session.user);
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      if (prof) setProfile(prof);
 
       // Fetch class details
       const { data: clsData, error: clsError } = await supabase
@@ -130,6 +140,54 @@ export default function ClassSpaceClient({ classId }: { classId: string }) {
   useEffect(() => {
     loadData();
   }, [classId]);
+
+  // Real-time group chat subscription
+  useEffect(() => {
+    if (!classId) return;
+
+    const channel = supabase
+      .channel(`sprint_discussions_${classId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sprint_discussions',
+          filter: `class_id=eq.${classId}`,
+        },
+        (payload) => {
+          const d = payload.new as any;
+          setDiscussions((prev) => {
+            if (prev.some((msg) => msg.id === d.id)) return prev;
+            return [
+              ...prev,
+              {
+                id: d.id,
+                classId: d.class_id,
+                userId: d.user_id,
+                userName: d.user_name,
+                userAvatar: d.user_avatar,
+                isMentor: d.is_mentor,
+                content: d.content,
+                createdAt: d.created_at,
+              },
+            ];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [classId]);
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    if (activeTab === 'discussions') {
+      chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [discussions, activeTab]);
 
   const isMentor = currentUser && currentClass && currentUser.id === currentClass.mentor_id;
   const isEnrolled = currentUser && enrollments.some((e) => e.student_id === currentUser.id && e.status === 'confirmed');
@@ -588,66 +646,153 @@ export default function ClassSpaceClient({ classId }: { classId: string }) {
         </div>
       )}
 
-      {/* Tab 2: Cohort Discussion */}
+      {/* Tab 2: Cohort Group Chat */}
       {activeTab === 'discussions' && (
-        <div className="saas-card p-6 sm:p-8 space-y-6">
-          <div className="border-b border-zinc-100 pb-3 flex items-center justify-between">
-            <h3 className="text-base font-semibold text-zinc-900">
-              {language === 'mn' ? 'Танхимын хэлэлцүүлэг & Асуулт хариулт' : 'Cohort Q&A and Discussions'}
-            </h3>
-            <span className="text-xs text-zinc-400">
-              {discussions.length} messages
-            </span>
-          </div>
-
-          {/* Discussion Messages */}
-          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-            {discussions.length === 0 ? (
-              <p className="text-xs text-zinc-500 py-12 text-center">
-                {language === 'mn' ? 'Хэлэлцүүлэг эхлээгүй байна. Анхны асуултаа үлдээнэ үү!' : 'No messages yet. Be the first to start the conversation!'}
-              </p>
-            ) : (
-              discussions.map((msg) => (
-                <div key={msg.id} className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-semibold shrink-0">
-                    {msg.userName.charAt(0)}
-                  </div>
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-zinc-900">
-                        {msg.userName}
-                      </span>
-                      {msg.isMentor && (
-                        <span className="text-[10px] font-semibold px-2 py-0.2 rounded bg-zinc-900 text-white">
-                          Mentor
-                        </span>
-                      )}
-                      <span className="text-[10px] text-zinc-400">
-                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <div className="text-xs text-zinc-700 bg-zinc-50 border border-zinc-200/60 p-3 rounded-xl leading-relaxed">
-                      {msg.content}
-                    </div>
-                  </div>
+        <div className="saas-card overflow-hidden shadow-sm flex flex-col h-[680px]">
+          {/* Group Chat Header */}
+          <div className="border-b border-zinc-200 bg-zinc-50/80 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center shadow-sm">
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-zinc-900">
+                    {language === 'mn' ? 'Ангийн групп чат' : 'Cohort Group Chat'}
+                  </h3>
+                  <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100 text-[10px] font-semibold text-emerald-800">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>{language === 'mn' ? 'Шууд холболттой' : 'Real-time'}</span>
+                  </span>
                 </div>
-              ))
-            )}
+                <p className="text-xs text-zinc-500">
+                  {language === 'mn'
+                    ? `Ментор: ${currentClass.mentor_name} • Нийт ${enrollments.length} сурагч`
+                    : `Mentor: ${currentClass.mentor_name} • ${enrollments.length} enrolled students`}
+                </p>
+              </div>
+            </div>
+
+            <div className="text-right hidden sm:block">
+              <span className="text-xs font-medium text-zinc-500">
+                {discussions.length} {language === 'mn' ? 'зурвас' : 'messages'}
+              </span>
+            </div>
           </div>
 
-          {/* Send Message Form */}
-          <form onSubmit={handleSendMessage} className="flex items-center gap-3 pt-4 border-t border-zinc-100">
+          {/* Group Chat Messages Container */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
+            {discussions.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-3">
+                <div className="h-12 w-12 rounded-full bg-zinc-100 text-zinc-400 flex items-center justify-center">
+                  <MessageSquare className="h-6 w-6" />
+                </div>
+                <div className="max-w-sm space-y-1">
+                  <p className="text-sm font-semibold text-zinc-800">
+                    {language === 'mn' ? 'Групп чат эхлээгүй байна' : 'No messages yet'}
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    {language === 'mn'
+                      ? 'Та бүхэн анхны асуулт, мэндчилгээгээ үлдээж яриагаа эхлүүлээрэй!'
+                      : 'Say hello and introduce yourself to start the discussion!'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              discussions.map((msg) => {
+                const isMe = currentUser && msg.userId === currentUser.id;
+                const isSystem = msg.userName === 'Систем' || msg.userName.includes('System');
+
+                if (isSystem) {
+                  return (
+                    <div key={msg.id} className="flex justify-center my-3">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-[11px] text-zinc-600 font-medium shadow-2xs">
+                        <Sparkles className="h-3 w-3 text-amber-500" />
+                        <span>{msg.content}</span>
+                        <span className="text-zinc-400 text-[9px] ml-1">
+                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (isMe) {
+                  return (
+                    <div key={msg.id} className="flex justify-end gap-2">
+                      <div className="space-y-1 max-w-[80%] sm:max-w-[70%] text-right">
+                        <div className="flex items-center justify-end gap-1.5 text-[10px] text-zinc-400 pr-1">
+                          <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="font-medium text-zinc-600">
+                            {language === 'mn' ? 'Би' : 'Me'}
+                          </span>
+                        </div>
+                        <div className="p-3.5 rounded-2xl rounded-tr-xs bg-zinc-900 text-white text-xs leading-relaxed text-left shadow-sm">
+                          {msg.content}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Other user or mentor
+                return (
+                  <div key={msg.id} className="flex items-start gap-3 max-w-[85%] sm:max-w-[75%]">
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs ${
+                      msg.isMentor 
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300' 
+                        : 'bg-zinc-100 text-zinc-800 border border-zinc-200'
+                    }`}>
+                      {msg.userName.charAt(0)}
+                    </div>
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2 pl-1">
+                        <span className="text-xs font-bold text-zinc-900">
+                          {msg.userName}
+                        </span>
+                        {msg.isMentor && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+                            Mentor
+                          </span>
+                        )}
+                        <span className="text-[10px] text-zinc-400">
+                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <div className={`p-3.5 rounded-2xl rounded-tl-xs text-xs leading-relaxed border ${
+                        msg.isMentor
+                          ? 'bg-amber-50/60 border-amber-200/80 text-zinc-900'
+                          : 'bg-zinc-50 border-zinc-200 text-zinc-800'
+                      }`}>
+                        {msg.content}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            <div ref={chatBottomRef} />
+          </div>
+
+          {/* Group Chat Input */}
+          <form onSubmit={handleSendMessage} className="p-4 border-t border-zinc-200 bg-zinc-50/50 flex items-center gap-3">
             <input
               type="text"
-              placeholder={language === 'mn' ? 'Асуулт, санаагаа хуваалцах...' : 'Ask a question or share thoughts...'}
+              placeholder={language === 'mn' ? 'Групп чатад асуулт, санал бичих...' : 'Type a message to the cohort...'}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              className="saas-input flex-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
+                }
+              }}
+              className="saas-input flex-1 py-2.5 text-xs bg-white"
             />
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="btn-primary px-4 py-2 text-xs font-medium text-white inline-flex items-center gap-1.5 shrink-0"
+              className="btn-primary px-5 py-2.5 text-xs font-medium text-white inline-flex items-center gap-1.5 shrink-0 shadow-sm disabled:opacity-50"
             >
               <Send className="h-3.5 w-3.5" />
               <span>{language === 'mn' ? 'Илгээх' : 'Send'}</span>

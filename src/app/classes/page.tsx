@@ -57,15 +57,17 @@ function ClassesContent() {
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setCurrentUserId(session.user.id);
-        const { data: enrollments } = await supabase
-          .from('class_enrollments')
-          .select('class_id')
-          .eq('student_id', session.user.id);
-        if (enrollments) {
-          setUserEnrollments(enrollments.map((e) => e.class_id));
-        }
+      if (!session?.user) {
+        router.push('/login?redirectTo=/classes');
+        return;
+      }
+      setCurrentUserId(session.user.id);
+      const { data: enrollments } = await supabase
+        .from('class_enrollments')
+        .select('class_id')
+        .eq('student_id', session.user.id);
+      if (enrollments) {
+        setUserEnrollments(enrollments.map((e) => e.class_id));
       }
 
       const { data: classesData, error } = await supabase
@@ -120,6 +122,29 @@ function ClassesContent() {
             ? language === 'mn' ? 'Суудал амжилттай баталгаажлаа! Танхимдаа нэвтэрнэ үү.' : 'Seat confirmed! Welcome to your cohort.'
             : language === 'mn' ? 'Хүсэлт илгээгдлээ. Ментор шалгасны дараа мэдэгдэнэ.' : 'Application submitted. Mentor will review shortly.'
         );
+
+        // Announce in cohort group chat
+        try {
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', currentUserId)
+            .single();
+          const studentName = prof?.name || 'Шинэ сурагч';
+
+          await supabase.from('sprint_discussions').insert({
+            class_id: classItem.id,
+            user_id: currentUserId,
+            user_name: 'Систем',
+            is_mentor: false,
+            content: language === 'mn'
+              ? `🎉 ${studentName} тус ангид шинээр нэгдлээ! Тавтай морил.`
+              : `🎉 ${studentName} has joined the cohort! Welcome.`,
+          });
+        } catch (discErr) {
+          console.log('Group chat announcement notice:', discErr);
+        }
+
         fetchClasses();
       }
       setTimeout(() => setNotification(null), 5000);
@@ -165,9 +190,6 @@ function ClassesContent() {
             </h1>
             <span className="badge-accent text-xs">
               {filteredClasses.length} {language === 'mn' ? 'анги' : 'available'}
-            </span>
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-              Үнэгүй / Free
             </span>
           </div>
           <p className="text-sm text-zinc-500 mt-1">
@@ -350,16 +372,11 @@ function ClassesContent() {
                     </div>
                   </div>
 
-                  {/* Logistics: Schedule & Duration (No price) */}
-                  <div className="rounded-lg bg-zinc-50 p-3 space-y-1.5 text-xs text-zinc-600">
-                    <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5 text-zinc-400" />
-                        {cls.duration_weeks} {language === 'mn' ? 'долоо хоног' : 'weeks'}
-                      </span>
-                      <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
-                        Үнэгүй / Free
-                      </span>
+                  {/* Logistics: Schedule & Duration */}
+                  <div className="rounded-lg bg-zinc-50 p-3 space-y-1 text-xs text-zinc-600">
+                    <div className="flex items-center gap-1.5 text-zinc-500">
+                      <Clock className="h-3.5 w-3.5 text-zinc-400" />
+                      <span>{cls.duration_weeks} {language === 'mn' ? 'долоо хоног' : 'weeks'}</span>
                     </div>
                     <div className="text-[11px] text-zinc-500 truncate">
                       {cls.schedule_summary}
@@ -518,10 +535,6 @@ function ClassesContent() {
                       <span className="text-zinc-500">{language === 'mn' ? 'Суудлын тоо' : 'Capacity'}</span>
                       <span className="font-medium text-zinc-900">{selectedClassForDrawer.max_seats} {language === 'mn' ? 'сурагч' : 'seats'}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-zinc-500">{language === 'mn' ? 'Төлбөр' : 'Cost'}</span>
-                      <span className="font-semibold text-emerald-700">{language === 'mn' ? 'Үнэгүй (100% Free)' : 'Free'}</span>
-                    </div>
                   </div>
                 </div>
 
@@ -574,7 +587,7 @@ function ClassesContent() {
                     className="btn-primary w-full py-2.5 text-xs font-medium text-white text-center"
                   >
                     {selectedClassForDrawer.enrollment_mode === 'instant'
-                      ? language === 'mn' ? 'Суудал авах (Үнэгүй)' : 'Claim Free Seat'
+                      ? language === 'mn' ? 'Суудал авах' : 'Claim Seat'
                       : language === 'mn' ? 'Хүсэлт илгээх' : 'Apply'}
                   </button>
                 )}

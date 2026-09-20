@@ -222,6 +222,13 @@ export default function Navbar() {
           ) : (
             <div className="flex items-center gap-2">
               <Link
+                href="/verify"
+                className="hidden sm:flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
+              >
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                <span>{language === 'mn' ? 'Батламж шалгах' : 'Verify Certificate'}</span>
+              </Link>
+              <Link
                 href="/login"
                 className="btn-primary inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-sm"
               >
@@ -293,6 +300,13 @@ export default function Navbar() {
             </>
           ) : (
             <>
+              <Link
+                href="/verify"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block py-2 text-sm font-medium text-emerald-700 hover:text-emerald-900 font-semibold"
+              >
+                {language === 'mn' ? 'Батламж шалгах' : 'Verify Certificate'}
+              </Link>
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}

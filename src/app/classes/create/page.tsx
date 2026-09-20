@@ -9,15 +9,12 @@ import {
   GraduationCap, 
   Users, 
   Calendar, 
-  Video, 
   Clock, 
   BookOpen, 
   ArrowLeft,
   CheckCircle2, 
   ChevronRight,
-  Sparkles,
-  HelpCircle,
-  Tag
+  Sparkles
 } from 'lucide-react';
 
 interface MissionDraft {
@@ -28,36 +25,38 @@ interface MissionDraft {
 }
 
 const NATIONAL_SUBJECTS = [
-  'Mathematics (Математик)',
-  'Physics (Физик)',
-  'Chemistry (Хими)',
-  'Biology (Биологи)',
-  'ICT (Мэдээлэл зүй)',
-  'Mongolian Language (Монгол хэл, бичиг)',
-  'English Language (Англи хэл)',
-  'History & Social Science (Түүх, нийгэм судлал)',
-  'Geography (Газар зүй)',
-  'Art & Design (Дүрслэх урлаг, зураг төсөл)',
-  'Music (Хөгжим)',
-  'Physical Education (Биеийн тамир)'
+  'Mathematics',
+  'Physics',
+  'Chemistry',
+  'Biology',
+  'ICT',
+  'Mongolian Language',
+  'English Language',
+  'History & Social Science',
+  'Geography',
+  'Art & Design',
+  'Music',
+  'Physical Education'
 ];
 
 const CAMBRIDGE_SUBJECTS = [
-  'Mathematics (Cambridge IGCSE / AS / A-Level)',
-  'Physics (Cambridge IGCSE / AS / A-Level)',
-  'Chemistry (Cambridge IGCSE / AS / A-Level)',
-  'Biology (Cambridge IGCSE / AS / A-Level)',
-  'English Language (First / Second Language)',
-  'ICT / Computer Science (Cambridge)',
-  'Business Studies (Cambridge)',
-  'History & Social Science (Cambridge)',
-  'Geography (Cambridge)',
-  'Chinese Language (Хятад хэл)',
-  'Japanese Language (Япон хэл)',
-  'Art & Design (Cambridge)',
-  'Music (Cambridge)',
+  'English Language',
+  'Mathematics',
+  'Physics',
+  'Chemistry',
+  'Biology',
+  'ICT',
+  'Business Studies',
+  'History & Social Science',
+  'Geography',
+  'Chinese Language',
+  'Japanese Language',
+  'Art & Design',
+  'Music',
   'Physical Education'
 ];
+
+const CAMBRIDGE_LEVELS = ['IGCSE', 'AS Level', 'A Level'];
 
 const DAYS_OF_WEEK = [
   { key: 'Mon', mn: 'Дав', fullMn: 'Даваа' },
@@ -69,14 +68,7 @@ const DAYS_OF_WEEK = [
   { key: 'Sun', mn: 'Ням', fullMn: 'Ням' },
 ];
 
-const GRADE_OPTIONS = [
-  '1–5-р анги (Бага анги)',
-  '6–8-р анги (Суурь боловсрол)',
-  '9–10-р анги (IGCSE / АДСБ)',
-  '11–12-р анги (AS / A-Levels / Төгсөх анги)',
-  'Бүх анги / Олимпиад',
-  'Их сургууль / Бусад'
-];
+const GRADE_NUMBERS = ['6', '7', '8', '9', '10', '11', '12'];
 
 export default function CreateClassPage() {
   const router = useRouter();
@@ -93,10 +85,11 @@ export default function CreateClassPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [curriculum, setCurriculum] = useState<'National' | 'Cambridge'>('National');
-  const [subject, setSubject] = useState('');
-  const [recommendedGrade, setRecommendedGrade] = useState('9–10-р анги (IGCSE / АДСБ)');
+  const [cambridgeLevel, setCambridgeLevel] = useState('IGCSE');
+  const [subject, setSubject] = useState('Mathematics');
+  const [selectedGrades, setSelectedGrades] = useState<string[]>(['9', '10', '11']);
 
-  // Step 2: Seats & Schedule (All free, no price)
+  // Step 2: Seats & Schedule
   const [maxSeats, setMaxSeats] = useState<number>(10);
   const [duration, setDuration] = useState<'3_days' | '1_week' | '2_weeks' | '4_weeks'>('2_weeks');
   const [selectedDays, setSelectedDays] = useState<string[]>(['Tue', 'Thu']);
@@ -105,7 +98,7 @@ export default function CreateClassPage() {
   const [meetingLink, setMeetingLink] = useState('https://meet.google.com/new');
   const [enrollmentMode, setEnrollmentMode] = useState<'instant' | 'application'>('instant');
 
-  // Step 3: Missions (Clear default on click / transparent placeholder)
+  // Step 3: Missions
   const [missions, setMissions] = useState<MissionDraft[]>([
     {
       weekNumber: 1,
@@ -141,14 +134,15 @@ export default function CreateClassPage() {
 
       // Restore draft
       try {
-        const savedDraft = localStorage.getItem('mentormn_sprint_draft_v2');
+        const savedDraft = localStorage.getItem('mentormn_sprint_draft_v3');
         if (savedDraft) {
           const parsed = JSON.parse(savedDraft);
           if (parsed.title) setTitle(parsed.title);
           if (parsed.description) setDescription(parsed.description);
           if (parsed.subject) setSubject(parsed.subject);
           if (parsed.curriculum) setCurriculum(parsed.curriculum);
-          if (parsed.recommendedGrade) setRecommendedGrade(parsed.recommendedGrade);
+          if (parsed.cambridgeLevel) setCambridgeLevel(parsed.cambridgeLevel);
+          if (parsed.selectedGrades) setSelectedGrades(parsed.selectedGrades);
           if (parsed.maxSeats) setMaxSeats(parsed.maxSeats);
           if (parsed.duration) setDuration(parsed.duration);
           if (parsed.selectedDays) setSelectedDays(parsed.selectedDays);
@@ -167,14 +161,15 @@ export default function CreateClassPage() {
 
   // Autosave draft
   useEffect(() => {
-    if (!title && !subject && !description) return;
+    if (!title && !description) return;
     const timeout = setTimeout(() => {
       const draft = {
         title,
         description,
         subject,
         curriculum,
-        recommendedGrade,
+        cambridgeLevel,
+        selectedGrades,
         maxSeats,
         duration,
         selectedDays,
@@ -183,20 +178,28 @@ export default function CreateClassPage() {
         meetingLink,
         missions,
       };
-      localStorage.setItem('mentormn_sprint_draft_v2', JSON.stringify(draft));
+      localStorage.setItem('mentormn_sprint_draft_v3', JSON.stringify(draft));
       setDraftSaved(true);
       setTimeout(() => setDraftSaved(false), 2000);
     }, 1000);
 
     return () => clearTimeout(timeout);
-  }, [title, description, subject, curriculum, recommendedGrade, maxSeats, duration, selectedDays, startTime, endTime, meetingLink, missions]);
+  }, [title, description, subject, curriculum, cambridgeLevel, selectedGrades, maxSeats, duration, selectedDays, startTime, endTime, meetingLink, missions]);
+
+  // When curriculum switches, ensure subject is valid
+  const handleCurriculumChange = (newCurr: 'National' | 'Cambridge') => {
+    setCurriculum(newCurr);
+    const list = newCurr === 'Cambridge' ? CAMBRIDGE_SUBJECTS : NATIONAL_SUBJECTS;
+    if (!list.includes(subject)) {
+      setSubject(list[0]);
+    }
+  };
 
   // Adjust missions count when duration changes
   const handleDurationChange = (dur: '3_days' | '1_week' | '2_weeks' | '4_weeks') => {
     setDuration(dur);
     let count = 2;
-    if (dur === '3_days') count = 1;
-    else if (dur === '1_week') count = 1;
+    if (dur === '3_days' || dur === '1_week') count = 1;
     else if (dur === '2_weeks') count = 2;
     else if (dur === '4_weeks') count = 4;
 
@@ -221,6 +224,12 @@ export default function CreateClassPage() {
     );
   };
 
+  const toggleGrade = (gr: string) => {
+    setSelectedGrades((prev) =>
+      prev.includes(gr) ? prev.filter((g) => g !== gr) : [...prev, gr].sort((a, b) => Number(a) - Number(b))
+    );
+  };
+
   const updateMission = (index: number, field: keyof MissionDraft, value: any) => {
     setMissions((prev) => {
       const updated = [...prev];
@@ -229,20 +238,19 @@ export default function CreateClassPage() {
     });
   };
 
-  // Build schedule summary string
   const formatScheduleSummary = () => {
     const dayNames = selectedDays.map((d) => DAYS_OF_WEEK.find((item) => item.key === d)?.fullMn || d).join(', ');
     return `${dayNames || 'Хуваарь сонгоогүй'}, ${startTime} - ${endTime} (MNT)`;
   };
 
   const durationWeeksNumber = duration === '3_days' ? 1 : duration === '1_week' ? 1 : duration === '2_weeks' ? 2 : 4;
-  const durationLabel = duration === '3_days' ? '3 өдөр (3 Days)' : duration === '1_week' ? '1 долоо хоног (1 Week)' : duration === '2_weeks' ? '2 долоо хоног (2 Weeks)' : '4 долоо хоног (4 Weeks)';
+  const durationLabel = duration === '3_days' ? '3 өдөр' : duration === '1_week' ? '1 долоо хоног' : duration === '2_weeks' ? '2 долоо хоног' : '4 долоо хоног';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingRef.current || loading) return;
     if (!currentUser || !title.trim() || !subject.trim()) {
-      alert(language === 'mn' ? 'Сургалтын нэр болон хичээлийн чиглэлийг оруулна уу.' : 'Please enter sprint title and subject.');
+      alert(language === 'mn' ? 'Сургалтын нэр болон хичээлийг оруулна уу.' : 'Please enter sprint title and subject.');
       return;
     }
 
@@ -254,27 +262,29 @@ export default function CreateClassPage() {
       const mentorSchool = profile?.school || 'Academic Mentor';
       const mentorTier = profile?.mentor_tier || 'JUNIOR_MENTOR';
 
-      // Ensure missions have titles
       const formattedMissions = missions.map((m, idx) => ({
         weekNumber: m.weekNumber || idx + 1,
-        title: m.title.trim() || (duration === '3_days' ? 'Sprint Mastery Challenge' : `Week ${idx + 1} Mastery Challenge`),
-        description: m.description.trim() || 'Deep dive into topic fundamentals, problem solving, and synthesis.',
+        title: m.title.trim() || (duration === '3_days' ? 'Sprint Challenge' : `Week ${idx + 1} Challenge`),
+        description: m.description.trim() || 'Core definitions, problem solving, and deliverable submission.',
         deliverablePrompt: m.deliverablePrompt.trim() || 'Submit solved problem set PDF or project link.',
       }));
+
+      const finalCurriculum = curriculum === 'Cambridge' ? `Cambridge (${cambridgeLevel})` : 'National Curriculum';
+      const gradeSummary = selectedGrades.length > 0 ? `${selectedGrades.join(', ')}-р анги` : 'Бүх анги';
 
       const { data, error } = await supabase
         .from('sprint_classes')
         .insert({
           title: title.trim(),
-          description: description.trim(),
+          description: description.trim() ? `${description.trim()}\n\nЗорилтот анги: ${gradeSummary}` : `Зорилтот анги: ${gradeSummary}`,
           mentor_id: currentUser.id,
           mentor_name: mentorName,
           mentor_school: mentorSchool,
           mentor_tier: mentorTier,
           subject: subject.trim(),
-          curriculum: curriculum === 'Cambridge' ? 'Cambridge Curriculum' : 'National Curriculum',
+          curriculum: finalCurriculum,
           max_seats: Math.max(1, Number(maxSeats) || 10),
-          price_mnt: 0, // 100% Free!
+          price_mnt: 0,
           enrollment_mode: enrollmentMode,
           missions: formattedMissions,
           duration_weeks: durationWeeksNumber,
@@ -287,7 +297,23 @@ export default function CreateClassPage() {
 
       if (error) throw error;
 
-      localStorage.removeItem('mentormn_sprint_draft_v2');
+      // Automatically create inaugural group chat welcome message
+      try {
+        await supabase.from('sprint_discussions').insert({
+          class_id: data.id,
+          user_id: currentUser.id,
+          user_name: mentorName,
+          user_avatar: profile?.avatar_url || null,
+          is_mentor: true,
+          content: language === 'mn'
+            ? `👋 Сайн байна уу! Би энэхүү "${title.trim()}" бичил танхимыг үүсгэлээ. Та бүхэн энэхүү групп чатаар асуулт асууж, санал бодлоо чөлөөтэй хуваалцаарай.`
+            : `👋 Hello everyone! I have created the "${title.trim()}" cohort. Feel free to introduce yourselves and ask questions here.`,
+        });
+      } catch (chatErr) {
+        console.log('Error creating inaugural discussion message:', chatErr);
+      }
+
+      localStorage.removeItem('mentormn_sprint_draft_v3');
       router.push(`/class/${data.id}`);
     } catch (err: any) {
       alert(err.message || 'Error creating sprint');
@@ -296,7 +322,7 @@ export default function CreateClassPage() {
     }
   };
 
-  const subjectSuggestions = curriculum === 'Cambridge' ? CAMBRIDGE_SUBJECTS : NATIONAL_SUBJECTS;
+  const subjectList = curriculum === 'Cambridge' ? CAMBRIDGE_SUBJECTS : NATIONAL_SUBJECTS;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
@@ -311,14 +337,9 @@ export default function CreateClassPage() {
             <ArrowLeft className="h-3.5 w-3.5" />
             {language === 'mn' ? 'Ангийн жагсаалт руу буцах' : 'Back to Sprints'}
           </Link>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">
-              {language === 'mn' ? 'Шинэ хичээл зарлах' : 'Create a Free Sprint'}
-            </h1>
-            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-              100% Үнэгүй / Free
-            </span>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">
+            {language === 'mn' ? 'Шинэ хичээл зарлах' : 'Create a Sprint'}
+          </h1>
           <p className="text-xs sm:text-sm text-zinc-500 mt-1">
             {language === 'mn'
               ? 'Үндэсний болон Кембрижийн хөтөлбөрийн дагуу сурагчдад зориулсан бичил анги үүсгэх.'
@@ -409,7 +430,7 @@ export default function CreateClassPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setCurriculum('National')}
+                  onClick={() => handleCurriculumChange('National')}
                   className={`p-4 rounded-xl border text-left transition-all ${
                     curriculum === 'National'
                       ? 'border-zinc-900 bg-zinc-900 text-white shadow-sm'
@@ -417,12 +438,12 @@ export default function CreateClassPage() {
                   }`}
                 >
                   <div className="text-xs font-bold">National Curriculum</div>
-                  <div className="text-[11px] opacity-80 mt-0.5">Үндэсний хөтөлбөр (Монгол хэл, Математик, Физик...)</div>
+                  <div className="text-[11px] opacity-80 mt-0.5">Үндэсний хөтөлбөр</div>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => setCurriculum('Cambridge')}
+                  onClick={() => handleCurriculumChange('Cambridge')}
                   className={`p-4 rounded-xl border text-left transition-all ${
                     curriculum === 'Cambridge'
                       ? 'border-zinc-900 bg-zinc-900 text-white shadow-sm'
@@ -430,52 +451,43 @@ export default function CreateClassPage() {
                   }`}
                 >
                   <div className="text-xs font-bold">Cambridge Curriculum</div>
-                  <div className="text-[11px] opacity-80 mt-0.5">Кембриж хөтөлбөр (IGCSE / AS / A-Levels)</div>
+                  <div className="text-[11px] opacity-80 mt-0.5">Кембриж хөтөлбөр</div>
                 </button>
               </div>
             </div>
 
-            {/* Subject Input (Text box as requested) */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
+            {/* If Cambridge, show level dropdown (IGCSE / AS / A) */}
+            {curriculum === 'Cambridge' && (
+              <div className="space-y-1.5 animate-in fade-in">
                 <label className="text-xs font-medium text-zinc-700">
-                  {language === 'mn' ? 'Хичээлийн чиглэл (Шууд бичих)' : 'Subject / Field (Text Input)'} *
+                  {language === 'mn' ? 'Кембрижийн түвшин' : 'Cambridge Level'} *
                 </label>
-                <span className="text-[11px] text-zinc-400">
-                  {language === 'mn' ? 'Өөрөө бичих эсвэл доороос дарж сонгох' : 'Type freely or click below'}
-                </span>
+                <select
+                  value={cambridgeLevel}
+                  onChange={(e) => setCambridgeLevel(e.target.value)}
+                  className="saas-input"
+                >
+                  {CAMBRIDGE_LEVELS.map((lvl) => (
+                    <option key={lvl} value={lvl}>{lvl}</option>
+                  ))}
+                </select>
               </div>
-              <input
-                type="text"
-                required
-                placeholder={language === 'mn' ? 'Жишээ нь: Mathematics (Математик) эсвэл Cambridge A-Level Physics' : 'e.g. Mathematics, Physics, ICT...'}
+            )}
+
+            {/* Clean Subject Dropdown (without extra clutter) */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-700">
+                {language === 'mn' ? 'Хичээл сонгох' : 'Subject'} *
+              </label>
+              <select
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="saas-input text-sm font-medium"
-              />
-
-              {/* Clickable Quick Suggestions */}
-              <div className="space-y-1 pt-1">
-                <span className="text-[11px] font-medium text-zinc-400 block">
-                  {curriculum === 'Cambridge' ? 'Кембрижийн хичээлүүд:' : 'Үндэсний хөтөлбөрийн хичээлүүд:'}
-                </span>
-                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 bg-zinc-50 rounded-lg border border-zinc-100">
-                  {subjectSuggestions.map((subItem) => (
-                    <button
-                      key={subItem}
-                      type="button"
-                      onClick={() => setSubject(subItem)}
-                      className={`text-[11px] px-2.5 py-1 rounded-md transition-colors ${
-                        subject === subItem
-                          ? 'bg-zinc-900 text-white font-semibold'
-                          : 'bg-white text-zinc-700 border border-zinc-200/80 hover:bg-zinc-100'
-                      }`}
-                    >
-                      {subItem}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                className="saas-input text-sm"
+              >
+                {subjectList.map((sub) => (
+                  <option key={sub} value={sub}>{sub}</option>
+                ))}
+              </select>
             </div>
 
             {/* Sprint Title */}
@@ -486,27 +498,42 @@ export default function CreateClassPage() {
               <input
                 type="text"
                 required
-                placeholder={language === 'mn' ? 'Жишээ нь: Cambridge A-Level Math: Calculus & Mechanics Бэлтгэл' : 'e.g. Cambridge A-Level Math: Calculus & Mechanics'}
+                placeholder={language === 'mn' ? 'Жишээ нь: Calculus & Mechanics Гүнзгийрүүлсэн бэлтгэл' : 'e.g. Calculus & Mechanics Sprint'}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="saas-input"
               />
             </div>
 
-            {/* Recommended Target Grade */}
-            <div className="space-y-1.5">
+            {/* Target Grade Checkboxes (Row of 6, 7, 8, 9, 10, 11, 12) */}
+            <div className="space-y-2">
               <label className="text-xs font-medium text-zinc-700">
-                {language === 'mn' ? 'Зорилтот анги (Хэддүгээр ангийн сурагчид хамрагдвал зохих)' : 'Recommended Target Grade'} *
+                {language === 'mn' ? 'Зорилтот анги (Сонгоно уу)' : 'Target Grade (Select grades)'} *
               </label>
-              <select
-                value={recommendedGrade}
-                onChange={(e) => setRecommendedGrade(e.target.value)}
-                className="saas-input"
-              >
-                {GRADE_OPTIONS.map((gr) => (
-                  <option key={gr} value={gr}>{gr}</option>
-                ))}
-              </select>
+              <div className="flex flex-wrap items-center gap-2">
+                {GRADE_NUMBERS.map((gr) => {
+                  const isSelected = selectedGrades.includes(gr);
+                  return (
+                    <button
+                      key={gr}
+                      type="button"
+                      onClick={() => toggleGrade(gr)}
+                      className={`h-10 w-12 rounded-xl text-xs font-bold border transition-all flex items-center justify-center ${
+                        isSelected
+                          ? 'bg-zinc-900 text-white border-zinc-900 shadow-sm'
+                          : 'bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100'
+                      }`}
+                    >
+                      {gr}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-zinc-500">
+                {language === 'mn'
+                  ? `Сонгогдсон: ${selectedGrades.length > 0 ? selectedGrades.join(', ') + '-р анги' : 'Бүх анги'}`
+                  : `Selected: ${selectedGrades.length > 0 ? 'Grades ' + selectedGrades.join(', ') : 'All grades'}`}
+              </p>
             </div>
 
             {/* Description */}
@@ -538,18 +565,18 @@ export default function CreateClassPage() {
           </div>
         )}
 
-        {/* STEP 2: Seats & Timing (No price, custom seats) */}
+        {/* STEP 2: Seats & Timing */}
         {currentStep === 2 && (
           <div className="saas-card p-6 sm:p-8 space-y-6">
             <h2 className="text-base font-semibold text-zinc-900 border-b border-zinc-100 pb-3">
               {language === 'mn' ? '2. Суудлын тоо ба цагийн хуваарь' : '2. Cohort Seats & Schedule'}
             </h2>
 
-            {/* Flexible Seat Count (No 10-seat limit) */}
+            {/* Flexible Seat Count */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-zinc-700">
-                  {language === 'mn' ? 'Суудлын тоо (Хүссэн тоогоо оруулна уу)' : 'Total Seat Capacity'} *
+                  {language === 'mn' ? 'Суудлын тоо' : 'Total Seat Capacity'} *
                 </label>
                 <span className="text-xs font-bold text-zinc-900">
                   {maxSeats} {language === 'mn' ? 'суудал' : 'seats'}
@@ -581,12 +608,9 @@ export default function CreateClassPage() {
                   ))}
                 </div>
               </div>
-              <p className="text-[11px] text-zinc-500">
-                {language === 'mn' ? 'Хичээлийн зорилгоос хамааран ганцаарчилсан эсвэл бүлэг ангийн тоогоо сонгоно.' : 'Set any number of seats suitable for your mentorship style.'}
-              </p>
             </div>
 
-            {/* Duration Options: 3 Days, 1 Week, 2 Weeks, 4 Weeks */}
+            {/* Duration Options */}
             <div className="space-y-2">
               <label className="text-xs font-medium text-zinc-700">
                 {language === 'mn' ? 'Үргэлжлэх хугацаа' : 'Duration'} *
@@ -707,7 +731,7 @@ export default function CreateClassPage() {
           </div>
         )}
 
-        {/* STEP 3: Weekly Missions (Clear-on-click placeholder feature) */}
+        {/* STEP 3: Weekly Missions */}
         {currentStep === 3 && (
           <div className="saas-card p-6 sm:p-8 space-y-6">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
@@ -717,8 +741,8 @@ export default function CreateClassPage() {
                 </h2>
                 <p className="text-xs text-zinc-500 mt-0.5">
                   {language === 'mn'
-                    ? 'Сурагчдын гүйцэтгэх даалгаврыг оруулна уу. (Жишээ текст дээр дарахад автоматаар арилна)'
-                    : 'Specify weekly deliverables. Example placeholders clear automatically when clicked.'}
+                    ? 'Сурагчдын гүйцэтгэх даалгаврыг оруулна уу.'
+                    : 'Specify weekly deliverables.'}
                 </p>
               </div>
               <span className="badge-accent text-xs">
@@ -746,7 +770,7 @@ export default function CreateClassPage() {
                     </label>
                     <input
                       type="text"
-                      placeholder={`e.g. ${subject || 'Topic'} Foundational Problem Set & Diagnostics`}
+                      placeholder={`e.g. ${subject || 'Topic'} Problem Set & Review`}
                       value={m.title}
                       onChange={(e) => updateMission(idx, 'title', e.target.value)}
                       className="saas-input"

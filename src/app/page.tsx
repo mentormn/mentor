@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { 
   GraduationCap, 
@@ -15,8 +17,10 @@ import {
 } from 'lucide-react';
 import { NATIONAL_TELEMETRY, INITIAL_CLASSES } from '@/lib/mockData';
 import { TIER_CONFIGS } from '@/lib/engine/tierProgression';
+import { useLanguage } from '@/lib/i18n';
 
 export default function Home() {
+  const { language, t } = useLanguage();
   const featuredClasses = INITIAL_CLASSES.slice(0, 3);
 
   return (
@@ -29,18 +33,18 @@ export default function Home() {
           {/* Institutional Pill */}
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-100/70 px-4 py-1.5 text-xs font-semibold text-blue-900 dark:border-blue-800 dark:bg-blue-950/80 dark:text-blue-300 shadow-sm">
             <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
-            National Academic Mentorship & Intelligence Infrastructure
+            {t('heroBadge')}
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15]">
-            Learn from students who{' '}
+            {t('heroTitlePrefix')}
             <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 bg-clip-text text-transparent">
-              actually mastered it.
+              {t('heroTitleHighlight')}
             </span>
           </h1>
 
           <p className="mx-auto max-w-2xl text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
-            Outdated classroom lecturing leaves curiosity behind. Mentor.mn connects ambitious students with proven peer mentors for focused <strong>1–3 week sprint classes</strong> (1 to 10 seats). Build tangible deliverables, earn Ministry-accredited formal credentials, and pay it forward.
+            {t('heroDesc')}
           </p>
 
           {/* Action Buttons */}
@@ -50,7 +54,7 @@ export default function Home() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-bold text-white shadow-md hover:bg-blue-500 transition-all hover:scale-[1.02] active:scale-95"
             >
               <Compass className="h-4 w-4" />
-              Find a Class & Claim a Seat
+              {t('heroFindClass')}
               <ArrowRight className="h-4 w-4" />
             </Link>
 
@@ -59,7 +63,7 @@ export default function Home() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-sm font-bold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 transition-all hover:scale-[1.02] active:scale-95"
             >
               <GraduationCap className="h-4 w-4 text-blue-600" />
-              Open a Class as a Mentor
+              {t('heroOpenClass')}
             </Link>
           </div>
 
@@ -67,15 +71,15 @@ export default function Home() {
           <div className="pt-6 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              Flexible Cohorts (1 to 10 Seats)
+              {t('badgeCohorts')}
             </span>
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              Deliverable-Gated Progression
+              {t('badgeDeliverables')}
             </span>
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              SHA-256 Verifiable Ministry Credentials
+              {t('badgeCredentials')}
             </span>
           </div>
 
@@ -90,63 +94,63 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <Flame className="h-5 w-5 text-amber-500" />
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                  Live National Knowledge Flywheel
+                  {t('flywheelTitle')}
                 </h2>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Real-time impact telemetry across Mongolia&apos;s schools and provinces
+                {t('flywheelSubtitle')}
               </p>
             </div>
             <Link
               href="/ministry/audit"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-500"
             >
-              View Full Ministry Audit <ArrowRight className="h-3.5 w-3.5" />
+              {t('flywheelAuditLink')} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-6">
             <div className="space-y-1">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Active Sprint Classes
+                {t('statActiveClasses')}
               </p>
               <p className="text-3xl font-black text-slate-900 dark:text-white">
                 {NATIONAL_TELEMETRY.activeClasses}
               </p>
               <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                In-session this week
+                {t('statActiveSub')}
               </p>
             </div>
 
             <div className="space-y-1">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Students Guided
+                {t('statStudents')}
               </p>
               <p className="text-3xl font-black text-slate-900 dark:text-white">
                 {NATIONAL_TELEMETRY.totalStudentsTaught}
               </p>
-              <p className="text-[11px] text-slate-500">Across 1 to 10-seat cohorts</p>
+              <p className="text-[11px] text-slate-500">{t('statStudentsSub')}</p>
             </div>
 
             <div className="space-y-1">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Aimags Reached
+                {t('statAimags')}
               </p>
               <p className="text-3xl font-black text-blue-600">
                 {NATIONAL_TELEMETRY.aimagsReached} / 21
               </p>
-              <p className="text-[11px] text-slate-500">Urban-to-rural knowledge transfer</p>
+              <p className="text-[11px] text-slate-500">{t('statAimagsSub')}</p>
             </div>
 
             <div className="space-y-1">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Knowledge Multiplier
+                {t('statMultiplier')}
               </p>
               <p className="text-3xl font-black text-amber-500">
                 {NATIONAL_TELEMETRY.knowledgeMultiplier}
               </p>
-              <p className="text-[11px] text-slate-500">Graduates who become mentors</p>
+              <p className="text-[11px] text-slate-500">{t('statMultiplierSub')}</p>
             </div>
           </div>
         </div>
@@ -156,10 +160,10 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10">
         <div className="text-center space-y-3">
           <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            How the Knowledge Flywheel Works
+            {t('howItWorksTitle')}
           </h2>
           <p className="mx-auto max-w-xl text-sm text-slate-600 dark:text-slate-400">
-            A self-sustaining system designed to improve all students over time
+            {t('howItWorksSubtitle')}
           </p>
         </div>
 
@@ -170,10 +174,10 @@ export default function Home() {
               01
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              Sprint Classes (1 to 10 Seats)
+              {t('step1Title')}
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              Mentors open focused 1–3 week sprint classes on topics they mastered (e.g. Cambridge Differentiation, Pygame Dev, Olympiad Circuits) with custom seat limits.
+              {t('step1Desc')}
             </p>
           </div>
 
@@ -182,10 +186,10 @@ export default function Home() {
               02
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              Deliverable Verification
+              {t('step2Title')}
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              No time-farming. At the end of the sprint, students submit genuine proof: a working codebase, solved proof set, or lab analysis. Mentors review and verify.
+              {t('step2Desc')}
             </p>
           </div>
 
@@ -194,10 +198,10 @@ export default function Home() {
               03
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              Pay It Forward & Formal Tiers
+              {t('step3Title')}
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              Mentors level up through formal tiers (**Junior $\rightarrow$ Senior $\rightarrow$ Master $\rightarrow$ National Laureate**), while graduated students open their own sprint classes for younger peers!
+              {t('step3Desc')}
             </p>
           </div>
 
@@ -209,15 +213,15 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-              Open Sprint Classes
+              {t('openClassesTitle')}
             </h2>
-            <p className="text-xs text-slate-500">Classes starting soon with open seats</p>
+            <p className="text-xs text-slate-500">{t('openClassesSub')}</p>
           </div>
           <Link
             href="/classes"
             className="text-xs font-bold text-blue-600 hover:text-blue-500 flex items-center gap-1"
           >
-            Browse All Classes <ArrowRight className="h-3.5 w-3.5" />
+            {t('browseAllClasses')} <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
@@ -240,7 +244,7 @@ export default function Home() {
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${tierConfig.badgeClass}`}
                     >
                       <Sparkles className="h-2.5 w-2.5" />
-                      {tierConfig.titleEn}
+                      {language === 'mn' ? tierConfig.titleMn : tierConfig.titleEn}
                     </span>
                   </div>
 
@@ -259,7 +263,7 @@ export default function Home() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                      <span>{cls.durationWeeks} Weeks • {cls.scheduleSummary}</span>
+                      <span>{cls.durationWeeks} {language === 'mn' ? 'долоо хоног' : 'Weeks'} • {cls.scheduleSummary}</span>
                     </div>
                   </div>
                 </div>
@@ -269,13 +273,13 @@ export default function Home() {
                     <span className="font-bold text-slate-900 dark:text-white">
                       {cls.enrolledStudents.length} / {cls.maxSeats}
                     </span>{' '}
-                    <span className="text-slate-500">seats filled</span>
+                    <span className="text-slate-500">{t('seatsFilled')}</span>
                     {seatsLeft > 0 ? (
                       <p className="text-[11px] font-semibold text-emerald-600">
-                        {seatsLeft} {seatsLeft === 1 ? 'seat' : 'seats'} left
+                        {seatsLeft} {seatsLeft === 1 ? t('seatLeft') : t('seatsLeftPlural')}
                       </p>
                     ) : (
-                      <p className="text-[11px] font-semibold text-amber-600">Class full</p>
+                      <p className="text-[11px] font-semibold text-amber-600">{t('classFull')}</p>
                     )}
                   </div>
 
@@ -283,7 +287,7 @@ export default function Home() {
                     href={`/class/${cls.id}`}
                     className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-blue-500 transition-colors"
                   >
-                    View Class
+                    {t('viewClass')}
                   </Link>
                 </div>
               </div>
@@ -296,13 +300,13 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 uppercase tracking-wider">
-            <Award className="h-4 w-4" /> Official Ministry Recognition
+            <Award className="h-4 w-4" /> {t('tiersTitle')}
           </div>
           <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Formal Academic Mentor Tiers
+            {t('tiersTitle')}
           </h2>
           <p className="mx-auto max-w-xl text-sm text-slate-600 dark:text-slate-400">
-            Mentors advance by teaching cohorts and verifying genuine deliverables, unlocking prestigious credentials for university admissions.
+            {t('tiersSub')}
           </p>
         </div>
 
@@ -317,10 +321,10 @@ export default function Home() {
                   className={`inline-flex items-center gap-1 rounded px-2.5 py-1 text-xs font-extrabold uppercase border ${tier.badgeClass}`}
                 >
                   <Sparkles className="h-3 w-3" />
-                  {tier.titleEn}
+                  {language === 'mn' ? tier.titleMn : tier.titleEn}
                 </span>
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {tier.titleMn}
+                  {language === 'mn' ? tier.titleEn : tier.titleMn}
                 </p>
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {tier.description}

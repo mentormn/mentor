@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMentorStore } from '@/lib/store';
+import { useLanguage } from '@/lib/i18n';
 import { TIER_CONFIGS } from '@/lib/engine/tierProgression';
 import { 
   GraduationCap, 
@@ -10,13 +11,14 @@ import {
   PlusCircle, 
   ShieldCheck, 
   BarChart3, 
-  User as UserIcon,
+  Globe,
   Sparkles 
 } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
   const { user } = useMentorStore();
+  const { language, toggleLanguage, t } = useLanguage();
   const tierConfig = TIER_CONFIGS[user.mentorTier];
 
   return (
@@ -35,11 +37,11 @@ export default function Navbar() {
                   Mentor<span className="text-blue-600">.mn</span>
                 </span>
                 <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-800 dark:bg-blue-950 dark:text-blue-300">
-                  NATIONAL
+                  {t('nationalTag')}
                 </span>
               </div>
               <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                Academic Mentorship Infrastructure
+                {t('brandTitle')}
               </p>
             </div>
           </Link>
@@ -56,7 +58,7 @@ export default function Navbar() {
             }`}
           >
             <BookOpen className="h-4 w-4" />
-            Sprint Classes
+            {t('navClasses')}
           </Link>
 
           <Link
@@ -68,7 +70,7 @@ export default function Navbar() {
             }`}
           >
             <BarChart3 className="h-4 w-4 text-emerald-600" />
-            Ministry Telemetry
+            {t('navMinistry')}
           </Link>
 
           <Link
@@ -80,18 +82,29 @@ export default function Navbar() {
             }`}
           >
             <ShieldCheck className="h-4 w-4 text-blue-600" />
-            Verify Certificate
+            {t('navVerify')}
           </Link>
         </nav>
 
         {/* Right CTA & Dual-Identity Profile Pill */}
         <div className="flex items-center gap-3">
+          
+          {/* Language Switcher Button */}
+          <button
+            onClick={toggleLanguage}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 transition-colors"
+            title="Switch Language / Хэл солих"
+          >
+            <Globe className="h-3.5 w-3.5 text-blue-600" />
+            <span>{language === 'mn' ? 'EN' : 'МН'}</span>
+          </button>
+
           <Link
             href="/classes/create"
             className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-all active:scale-95"
           >
             <PlusCircle className="h-4 w-4" />
-            Open a Class
+            {t('navOpenClass')}
           </Link>
 
           {/* Unified Profile Link */}
@@ -124,11 +137,11 @@ export default function Navbar() {
                   className={`inline-flex items-center gap-0.5 rounded px-1 py-0.2 text-[9px] font-extrabold uppercase border ${tierConfig.badgeClass}`}
                 >
                   <Sparkles className="h-2.5 w-2.5" />
-                  {tierConfig.titleEn.split(' ')[0]}
+                  {language === 'mn' ? tierConfig.titleMn.split(' ')[0] : tierConfig.titleEn.split(' ')[0]}
                 </span>
               </div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                {user.mentorXp} XP • Dual Profile
+                {user.mentorXp} XP • {t('navProfile')}
               </p>
             </div>
           </Link>

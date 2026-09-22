@@ -355,6 +355,20 @@ export const INITIAL_DELIVERABLES: Deliverable[] = [
 
 export const INITIAL_CERTIFICATES: Certificate[] = [
   {
+    id: 'MN-ACAD-2026-0091',
+    mentorId: 'mentor-1',
+    mentorName: 'Temuulen Bat-Erdene',
+    mentorSchool: 'Orchlon International School / MIT Scholar',
+    tier: 'NATIONAL_LAUREATE',
+    totalHours: 32,
+    studentsImpacted: 10,
+    classTitle: 'Cambridge A-Level Mathematics & Advanced Mechanics Sprint',
+    subject: 'Mathematics',
+    sha256Hash: '4f8e62bc10583b289cf784e621147fa4167e91d84b2c124018863f8d689b9102',
+    issuedDate: '2026-09-18',
+    verificationUrl: 'https://mentor.mn/verify/MN-ACAD-2026-0091',
+  },
+  {
     id: 'MN-EDU-2026-7A4F',
     mentorId: 'user-current',
     mentorName: 'Temuulen Batbayar',

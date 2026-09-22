@@ -97,8 +97,12 @@ export default function Navbar() {
         
         {/* Brand */}
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 text-white shadow-sm">
+          <Link 
+            href={currentUser ? "/dashboard" : "/"} 
+            className="flex items-center gap-2.5 group cursor-pointer"
+            title={currentUser ? (language === 'mn' ? 'Хяналтын самбар' : 'Go to Dashboard') : 'Mentor.mn'}
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 text-white shadow-sm group-hover:bg-zinc-800 transition-colors">
               <GraduationCap className="h-4 w-4" />
             </div>
             <div className="flex items-center gap-1.5">
